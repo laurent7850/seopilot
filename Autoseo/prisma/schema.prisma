@@ -1,0 +1,269 @@
+// --------------------------------------------------------------------------
+// Prisma Schema - AutoSEO Platform
+// --------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --------------------------------------------------------------------------
+// Enums
+// --------------------------------------------------------------------------
+
+enum Plan {
+  FREE
+  STARTER
+  BUSINESS
+  AGENCY
+}
+
+enum ArticleStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
+enum BacklinkStatus {
+  PENDING
+  ACTIVE
+  LOST
+}
+
+// --------------------------------------------------------------------------
+// Auth Models (NextAuth)
+// --------------------------------------------------------------------------
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// --------------------------------------------------------------------------
+// User
+// --------------------------------------------------------------------------
+
+model User {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String?
+  hashedPassword   String?
+  image            String?
+  emailVerified    DateTime?
+  plan             Plan      @default(FREE)
+  notifyArticle    Boolean   @default(true)
+  notifyBacklink   Boolean   @default(true)
+  notifyWeekly     Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  sites        Site[]
+
+  @@index([email])
+}
+
+// --------------------------------------------------------------------------
+// Site
+// --------------------------------------------------------------------------
+
+model Site {
+  id              String   @id @default(cuid())
+  userId          String
+  url             String
+  name            String
+  niche           String?
+  language        String   @default("en")
+  market          String   @default("US")
+  wordpressUrl    String?
+  wordpressApiKey String?
+  webhookUrl      String?
+  gscPropertyUrl  String?  // Google Search Console property URL
+  gscAccessToken  String?  @db.Text
+  gscRefreshToken String?  @db.Text
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  articles           Article[]
+  keywords           Keyword[]
+  backlinks          Backlink[]
+  analyticsSnapshots AnalyticsSnapshot[]
+
+  @@unique([userId, url])
+  @@index([userId])
+  @@index([isActive])
+}
+
+// --------------------------------------------------------------------------
+// Article
+// --------------------------------------------------------------------------
+
+model Article {
+  id              String        @id @default(cuid())
+  siteId          String
+  title           String
+  slug            String
+  content         String?       @db.Text
+  metaTitle       String?
+  metaDescription String?
+  status          ArticleStatus @default(DRAFT)
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  wordpressPostId String?
+  wordCount       Int           @default(0)
+  seoScore        Float?
+  createdAt       DateTime      @default(now())
+
+  site            Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  articleKeywords ArticleKeyword[]
+
+  @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([publishedAt])
+}
+
+// --------------------------------------------------------------------------
+// Keyword
+// --------------------------------------------------------------------------
+
+model Keyword {
+  id               String   @id @default(cuid())
+  siteId           String
+  term             String
+  volume           Int?
+  difficulty       Float?
+  currentPosition  Float?
+  previousPosition Float?
+  trend            String?
+  createdAt        DateTime @default(now())
+
+  site            Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  articleKeywords ArticleKeyword[]
+  history         KeywordHistory[]
+
+  @@unique([siteId, term])
+  @@index([siteId])
+  @@index([volume])
+  @@index([currentPosition])
+}
+
+// --------------------------------------------------------------------------
+// KeywordHistory (position tracking over time)
+// --------------------------------------------------------------------------
+
+model KeywordHistory {
+  id        String   @id @default(cuid())
+  keywordId String
+  position  Float
+  date      DateTime @default(now())
+
+  keyword Keyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([keywordId, date])
+  @@index([keywordId])
+  @@index([date])
+}
+
+// --------------------------------------------------------------------------
+// ArticleKeyword (many-to-many junction)
+// --------------------------------------------------------------------------
+
+model ArticleKeyword {
+  id        String @id @default(cuid())
+  articleId String
+  keywordId String
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  keyword Keyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, keywordId])
+  @@index([articleId])
+  @@index([keywordId])
+}
+
+// --------------------------------------------------------------------------
+// Backlink
+// --------------------------------------------------------------------------
+
+model Backlink {
+  id              String         @id @default(cuid())
+  siteId          String
+  sourceUrl       String
+  targetUrl       String
+  anchorText      String?
+  status          BacklinkStatus @default(PENDING)
+  domainAuthority Float?
+  lastChecked     DateTime?
+  createdAt       DateTime       @default(now())
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, sourceUrl, targetUrl])
+  @@index([siteId])
+  @@index([status])
+}
+
+// --------------------------------------------------------------------------
+// AnalyticsSnapshot
+// --------------------------------------------------------------------------
+
+model AnalyticsSnapshot {
+  id                String   @id @default(cuid())
+  siteId            String
+  date              DateTime
+  organicTraffic    Int      @default(0)
+  totalKeywords     Int      @default(0)
+  avgPosition       Float?
+  backlinksCount    Int      @default(0)
+  articlesPublished Int      @default(0)
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@unique([siteId, date])
+  @@index([siteId])
+  @@index([date])
+  @@index([siteId, date])
+}

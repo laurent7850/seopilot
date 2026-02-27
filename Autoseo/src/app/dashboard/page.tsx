@@ -1,0 +1,267 @@
+'use client'
+
+import { useSession } from 'next-auth/react'
+import {
+  TrendingUp,
+  FileText,
+  Search,
+  Link2,
+  Sparkles,
+  Plus,
+  ArrowUpRight,
+  ArrowDownRight,
+  Loader2,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { useDashboardStats } from '@/hooks/use-api'
+
+const statusBadge: Record<string, string> = {
+  PUBLISHED: 'bg-green-100 text-green-700',
+  SCHEDULED: 'bg-yellow-100 text-yellow-700',
+  DRAFT: 'bg-gray-100 text-gray-700',
+  FAILED: 'bg-red-100 text-red-700',
+}
+
+const statusLabel: Record<string, string> = {
+  PUBLISHED: 'Publie',
+  SCHEDULED: 'Planifie',
+  DRAFT: 'Brouillon',
+  FAILED: 'Erreur',
+}
+
+export default function DashboardPage() {
+  const { data: session } = useSession()
+  const { data, loading } = useDashboardStats()
+
+  const stats = data?.stats
+  const recentArticles = data?.recentArticles || []
+
+  const statCards = [
+    {
+      name: 'Trafic organique',
+      value: stats?.organicTraffic?.toLocaleString('fr-FR') || '0',
+      icon: TrendingUp,
+      iconBg: 'bg-green-100',
+      iconColor: 'text-green-600',
+    },
+    {
+      name: 'Articles publies',
+      value: stats?.published?.toString() || '0',
+      icon: FileText,
+      iconBg: 'bg-blue-100',
+      iconColor: 'text-blue-600',
+    },
+    {
+      name: 'Mots-cles suivis',
+      value: stats?.keywords?.toString() || '0',
+      icon: Search,
+      iconBg: 'bg-purple-100',
+      iconColor: 'text-purple-600',
+    },
+    {
+      name: 'Backlinks actifs',
+      value: stats?.activeBacklinks?.toString() || '0',
+      icon: Link2,
+      iconBg: 'bg-orange-100',
+      iconColor: 'text-orange-600',
+    },
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome message */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">
+          Bonjour, {session?.user?.name || 'Utilisateur'} !
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Voici un apercu de votre performance SEO.
+        </p>
+      </div>
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((stat) => (
+          <div
+            key={stat.name}
+            className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.iconBg}`}
+              >
+                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+              </div>
+              <div>
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                ) : (
+                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                )}
+                <p className="text-sm text-gray-500">{stat.name}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Quick actions */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 className="text-base font-semibold text-gray-900">
+          Actions rapides
+        </h3>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link href="/dashboard/articles">
+            <Button className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Generer un article
+            </Button>
+          </Link>
+          <Link href="/dashboard/onboarding">
+            <Button variant="outline" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Ajouter un site
+            </Button>
+          </Link>
+          <Link href="/dashboard/keywords">
+            <Button variant="outline" className="gap-2">
+              <Search className="h-4 w-4" />
+              Rechercher des mots-cles
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Recent articles */}
+        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-5 py-4">
+            <h3 className="text-base font-semibold text-gray-900">
+              Articles recents
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 text-left">
+                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Titre
+                  </th>
+                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Statut
+                  </th>
+                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Score SEO
+                  </th>
+                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Date
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-12 text-center">
+                      <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
+                    </td>
+                  </tr>
+                ) : recentArticles.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-12 text-center text-sm text-gray-500">
+                      Aucun article pour le moment. Generez votre premier article !
+                    </td>
+                  </tr>
+                ) : (
+                  recentArticles.map((article: any) => (
+                    <tr key={article.id} className="hover:bg-gray-50">
+                      <td className="px-5 py-3 text-sm font-medium text-gray-900">
+                        {article.title}
+                      </td>
+                      <td className="px-5 py-3">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                            statusBadge[article.status] || 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {statusLabel[article.status] || article.status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        {article.seoScore ? (
+                          <div className="flex items-center gap-2">
+                            <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-100">
+                              <div
+                                className={`h-full rounded-full ${
+                                  article.seoScore >= 80
+                                    ? 'bg-green-500'
+                                    : article.seoScore >= 60
+                                    ? 'bg-yellow-500'
+                                    : 'bg-red-500'
+                                }`}
+                                style={{ width: `${article.seoScore}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-gray-600">
+                              {article.seoScore}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-sm text-gray-500">
+                        {new Date(article.createdAt).toLocaleDateString('fr-FR')}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Summary card */}
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-5 py-4">
+            <h3 className="text-base font-semibold text-gray-900">
+              Resume
+            </h3>
+          </div>
+          <div className="space-y-4 p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Sites</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {loading ? '-' : stats?.sites || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Total articles</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {loading ? '-' : stats?.articles || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Brouillons</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {loading ? '-' : stats?.drafts || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Total backlinks</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {loading ? '-' : stats?.backlinks || 0}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Position moyenne</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {loading ? '-' : stats?.avgPosition ? stats.avgPosition.toFixed(1) : '-'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
