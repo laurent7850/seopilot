@@ -29,6 +29,7 @@ services:
       - traefik.http.routers.seopilot.entrypoints=websecure
       - traefik.http.routers.seopilot.tls.certresolver=letsencrypt
       - traefik.http.services.seopilot.loadbalancer.server.port=3000
+      - traefik.docker.network=root_default
     depends_on:
       seopilot-postgres:
         condition: service_healthy
@@ -45,6 +46,8 @@ services:
     container_name: seopilot-worker
     restart: always
     command: ["npx", "tsx", "src/workers/index.ts"]
+    labels:
+      - traefik.enable=false
     environment:
       - DATABASE_URL=postgresql://seopilot:${DB_PASSWORD}@seopilot-postgres:5432/seopilot
       - REDIS_URL=redis://seopilot-redis:6379
