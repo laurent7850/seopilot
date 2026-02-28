@@ -304,6 +304,20 @@ export async function deleteArticle(id: string) {
   return res.json()
 }
 
+// --- Publish Article ---
+export async function publishArticle(articleId: string) {
+  const res = await fetch('/api/wordpress/publish', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ articleId }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to publish article')
+  }
+  return res.json()
+}
+
 // --- Backlink Check ---
 export async function checkBacklinksApi(siteId: string, backlinkIds?: string[]) {
   const res = await fetch('/api/backlinks/check', {

@@ -15,6 +15,7 @@ import {
   Edit3,
   Save,
   X,
+  Send,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
@@ -37,6 +38,7 @@ export default function ArticleDetailPage() {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [publishing, setPublishing] = useState(false)
   const [copied, setCopied] = useState(false)
 
   // Edit fields
@@ -98,6 +100,20 @@ export default function ArticleDetailPage() {
       setTimeout(() => setCopied(false), 2000)
     } catch {
       toast.error('Impossible de copier')
+    }
+  }
+
+  const handlePublish = async () => {
+    if (!confirm('Marquer cet article comme publie ?')) return
+    setPublishing(true)
+    try {
+      await updateArticle(id, { status: 'PUBLISHED' })
+      toast.success('Article marque comme publie')
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setPublishing(false)
     }
   }
 
@@ -164,6 +180,17 @@ export default function ArticleDetailPage() {
                 <Edit3 className="h-4 w-4" />
                 Modifier
               </Button>
+              {article.status !== 'PUBLISHED' && (
+                <Button
+                  size="sm"
+                  className="gap-2 bg-green-600 hover:bg-green-700"
+                  onClick={handlePublish}
+                  disabled={publishing}
+                >
+                  {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  Publier
+                </Button>
+              )}
             </>
           )}
           {editing && (
