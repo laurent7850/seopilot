@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateArticle } from '@/services/article-generator'
+import { calculateSeoScore } from '@/services/seo-scorer'
 import { getArticleQueue } from '@/lib/queue'
 
 export async function POST(request: NextRequest) {
@@ -70,6 +71,16 @@ export async function POST(request: NextRequest) {
       wordCount: body.wordCount,
     })
 
+    // Calculate SEO score
+    const seoResult = calculateSeoScore({
+      title: generated.title,
+      metaTitle: generated.metaTitle,
+      metaDescription: generated.metaDescription,
+      content: generated.content,
+      keyword,
+      wordCount: generated.wordCount,
+    })
+
     // Save the article to the database
     const article = await prisma.article.create({
       data: {
@@ -80,6 +91,7 @@ export async function POST(request: NextRequest) {
         metaTitle: generated.metaTitle,
         metaDescription: generated.metaDescription,
         wordCount: generated.wordCount,
+        seoScore: seoResult.score,
         status: 'DRAFT',
       },
     })

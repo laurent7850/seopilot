@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { calculateSeoScore } from '@/services/seo-scorer'
 
 export async function GET(
   request: NextRequest,
@@ -56,15 +57,39 @@ export async function PATCH(
       return NextResponse.json({ error: 'Article not found' }, { status: 404 })
     }
 
+    // Merge updated fields
+    const newTitle = body.title ?? article.title
+    const newContent = body.content ?? article.content
+    const newMetaTitle = body.metaTitle !== undefined ? body.metaTitle : article.metaTitle
+    const newMetaDescription = body.metaDescription !== undefined ? body.metaDescription : article.metaDescription
+
+    // Recalculate SEO score when content-related fields change
+    const contentChanged = body.title || body.content || body.metaTitle !== undefined || body.metaDescription !== undefined
+    let seoScore = article.seoScore
+    if (contentChanged) {
+      const textContent = (newContent || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+      const wordCount = textContent.split(/\s+/).filter(Boolean).length
+      const seoResult = calculateSeoScore({
+        title: newTitle,
+        metaTitle: newMetaTitle,
+        metaDescription: newMetaDescription,
+        content: newContent,
+        keyword: body.keyword,
+        wordCount,
+      })
+      seoScore = seoResult.score
+    }
+
     const updated = await prisma.article.update({
       where: { id },
       data: {
-        title: body.title ?? article.title,
+        title: newTitle,
         slug: body.slug ?? article.slug,
-        content: body.content ?? article.content,
-        metaTitle: body.metaTitle !== undefined ? body.metaTitle : article.metaTitle,
-        metaDescription: body.metaDescription !== undefined ? body.metaDescription : article.metaDescription,
+        content: newContent,
+        metaTitle: newMetaTitle,
+        metaDescription: newMetaDescription,
         status: body.status ?? article.status,
+        seoScore,
       },
     })
 
