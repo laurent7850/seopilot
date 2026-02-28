@@ -80,6 +80,13 @@ export async function PATCH(
       seoScore = seoResult.score
     }
 
+    // Set publishedAt when status changes to PUBLISHED
+    const newStatus = body.status ?? article.status
+    let publishedAt = article.publishedAt
+    if (newStatus === 'PUBLISHED' && article.status !== 'PUBLISHED') {
+      publishedAt = new Date()
+    }
+
     const updated = await prisma.article.update({
       where: { id },
       data: {
@@ -88,8 +95,9 @@ export async function PATCH(
         content: newContent,
         metaTitle: newMetaTitle,
         metaDescription: newMetaDescription,
-        status: body.status ?? article.status,
+        status: newStatus,
         seoScore,
+        publishedAt,
       },
     })
 

@@ -92,7 +92,8 @@ export async function POST(request: NextRequest) {
         metaDescription: generated.metaDescription,
         wordCount: generated.wordCount,
         seoScore: seoResult.score,
-        status: 'DRAFT',
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
       },
     })
 
