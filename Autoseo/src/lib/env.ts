@@ -17,8 +17,9 @@ const ENV_VARS: EnvVar[] = [
   { name: 'NEXTAUTH_URL', required: true, description: 'URL publique de l\'application' },
   { name: 'NEXTAUTH_SECRET', required: true, description: 'Secret pour les sessions NextAuth' },
 
-  // OpenAI
-  { name: 'OPENAI_API_KEY', required: true, description: 'Cle API OpenAI pour la generation IA' },
+  // AI (OpenRouter ou OpenAI)
+  { name: 'OPENROUTER_API_KEY', required: false, description: 'Cle API OpenRouter (prioritaire sur OpenAI)' },
+  { name: 'OPENAI_API_KEY', required: false, description: 'Cle API OpenAI (fallback si pas OpenRouter)' },
 
   // Redis
   { name: 'REDIS_URL', required: false, description: 'URL de connexion Redis (defaut: redis://localhost:6379)' },
@@ -58,6 +59,10 @@ export function checkEnv(): EnvCheckResult {
   }
 
   // Specific checks
+  if (!process.env.OPENROUTER_API_KEY && !process.env.OPENAI_API_KEY) {
+    missing.push('OPENROUTER_API_KEY ou OPENAI_API_KEY - Au moins une cle API IA est requise')
+  }
+
   if (process.env.NEXTAUTH_SECRET === 'your-secret-key-here-change-in-production') {
     warnings.push('NEXTAUTH_SECRET utilise la valeur par defaut - changez-la en production!')
   }

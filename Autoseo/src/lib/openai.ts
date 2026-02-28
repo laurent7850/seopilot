@@ -4,10 +4,16 @@ let _openai: OpenAI | null = null
 
 export function getOpenAI(): OpenAI {
   if (!_openai) {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not set')
+    const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      throw new Error('OPENROUTER_API_KEY or OPENAI_API_KEY is not set')
     }
-    _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    _openai = new OpenAI({
+      apiKey,
+      baseURL: process.env.OPENROUTER_API_KEY
+        ? 'https://openrouter.ai/api/v1'
+        : 'https://api.openai.com/v1',
+    })
   }
   return _openai
 }

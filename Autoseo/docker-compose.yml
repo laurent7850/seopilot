@@ -13,7 +13,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-SEOPilot}
       - NEXT_PUBLIC_APP_URL=${NEXTAUTH_URL}
       - SMTP_HOST=${SMTP_HOST:-}
@@ -39,7 +40,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://seopilot:${DB_PASSWORD}@postgres:5432/seopilot
       - REDIS_URL=redis://redis:6379
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy
