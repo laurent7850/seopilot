@@ -65,6 +65,7 @@ export async function PATCH(
         wordpressUrl: body.wordpressUrl !== undefined ? body.wordpressUrl : site.wordpressUrl,
         wordpressApiKey: body.wordpressApiKey !== undefined ? body.wordpressApiKey : site.wordpressApiKey,
         webhookUrl: body.webhookUrl !== undefined ? body.webhookUrl : site.webhookUrl,
+        webhookSecret: body.webhookSecret !== undefined ? body.webhookSecret : site.webhookSecret,
         isActive: body.isActive !== undefined ? body.isActive : site.isActive,
       },
     })

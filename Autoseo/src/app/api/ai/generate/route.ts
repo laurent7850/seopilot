@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { generateArticle } from '@/services/article-generator'
 import { calculateSeoScore } from '@/services/seo-scorer'
 import { getArticleQueue } from '@/lib/queue'
+import { publishViaWebhook } from '@/services/publisher'
 
 export async function POST(request: NextRequest) {
   try {
@@ -97,9 +98,36 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Push article to target site via webhook if configured
+    let webhookResult = null
+    if (site.webhookUrl) {
+      const siteUrl = site.url.replace(/\/+$/, '')
+      const fullWebhookUrl = site.webhookUrl.startsWith('http')
+        ? site.webhookUrl
+        : `${siteUrl}${site.webhookUrl.startsWith('/') ? '' : '/'}${site.webhookUrl}`
+
+      webhookResult = await publishViaWebhook({
+        webhookUrl: fullWebhookUrl,
+        webhookSecret: site.webhookSecret || undefined,
+        article: {
+          title: generated.title,
+          slug: generated.slug,
+          content: generated.content,
+          metaTitle: generated.metaTitle,
+          metaDescription: generated.metaDescription,
+          wordCount: generated.wordCount,
+        },
+      })
+
+      if (!webhookResult.success) {
+        console.error('Webhook publish failed:', webhookResult.error)
+      }
+    }
+
     return NextResponse.json({
       success: true,
       article,
+      webhook: webhookResult,
     })
   } catch (error) {
     console.error('Article generation error:', error)

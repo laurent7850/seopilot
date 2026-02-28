@@ -118,6 +118,7 @@ model Site {
   wordpressUrl    String?
   wordpressApiKey String?
   webhookUrl      String?
+  webhookSecret   String?
   gscPropertyUrl  String?  // Google Search Console property URL
   gscAccessToken  String?  @db.Text
   gscRefreshToken String?  @db.Text

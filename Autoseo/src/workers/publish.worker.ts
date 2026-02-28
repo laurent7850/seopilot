@@ -57,14 +57,21 @@ async function processPublishJob(job: Job<PublishJobData>) {
 
   // Try Webhook
   if (site.webhookUrl) {
+    const siteUrl = site.url.replace(/\/+$/, '')
+    const fullWebhookUrl = site.webhookUrl.startsWith('http')
+      ? site.webhookUrl
+      : `${siteUrl}${site.webhookUrl.startsWith('/') ? '' : '/'}${site.webhookUrl}`
+
     const result = await publishViaWebhook({
-      webhookUrl: site.webhookUrl,
+      webhookUrl: fullWebhookUrl,
+      webhookSecret: site.webhookSecret || undefined,
       article: {
         title: article.title,
         content: article.content,
         slug: article.slug,
         metaTitle: article.metaTitle,
         metaDescription: article.metaDescription,
+        wordCount: article.wordCount,
       },
     })
 

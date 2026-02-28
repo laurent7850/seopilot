@@ -80,14 +80,21 @@ async function processArticleJob(job: Job<ArticleJobData>) {
       }
 
       if (!published && site.webhookUrl) {
+        const siteUrl = site.url.replace(/\/+$/, '')
+        const fullWebhookUrl = site.webhookUrl.startsWith('http')
+          ? site.webhookUrl
+          : `${siteUrl}${site.webhookUrl.startsWith('/') ? '' : '/'}${site.webhookUrl}`
+
         const result = await publishViaWebhook({
-          webhookUrl: site.webhookUrl,
+          webhookUrl: fullWebhookUrl,
+          webhookSecret: site.webhookSecret || undefined,
           article: {
             title: generated.title,
             content: generated.content,
             slug: generated.slug,
             metaTitle: generated.metaTitle,
             metaDescription: generated.metaDescription,
+            wordCount: generated.wordCount,
           },
         })
         if (result.success) {

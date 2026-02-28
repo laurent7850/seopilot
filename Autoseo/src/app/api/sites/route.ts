@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const userId = (session.user as any).id as string
     const body = await request.json()
-    const { url, name, niche, language, market, wordpressUrl, wordpressApiKey, webhookUrl } = body
+    const { url, name, niche, language, market, wordpressUrl, wordpressApiKey, webhookUrl, webhookSecret } = body
 
     if (!url || !name) {
       return NextResponse.json(
@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
         wordpressUrl: wordpressUrl || null,
         wordpressApiKey: wordpressApiKey || null,
         webhookUrl: webhookUrl || null,
+        webhookSecret: webhookSecret || null,
       },
     })
 

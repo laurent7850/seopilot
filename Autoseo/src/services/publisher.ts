@@ -74,20 +74,26 @@ export async function publishToWordPress(
 
 export interface PublishViaWebhookParams {
   webhookUrl: string
+  webhookSecret?: string
   article: Record<string, unknown>
 }
 
 export async function publishViaWebhook(
   params: PublishViaWebhookParams
 ): Promise<PublishResult> {
-  const { webhookUrl, article } = params
+  const { webhookUrl, webhookSecret, article } = params
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (webhookSecret) {
+    headers['Authorization'] = `Bearer ${webhookSecret}`
+  }
 
   try {
     const response = await fetch(webhookUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(article),
     })
 
