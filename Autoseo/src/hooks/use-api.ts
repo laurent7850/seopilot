@@ -226,6 +226,7 @@ export function useAnalytics(siteId?: string, days?: number) {
 export async function generateArticle(data: {
   siteId: string
   keyword: string
+  niche?: string
   language?: string
   tone?: string
 }) {

@@ -90,7 +90,8 @@ export default function SiteDetailPage() {
       await generateArticle({
         siteId: id,
         keyword: genKeyword,
-        language: site?.language,
+        niche: site?.niche || 'general',
+        language: site?.language || 'fr',
       })
       toast.success('Article genere avec succes !')
       setGenKeyword('')

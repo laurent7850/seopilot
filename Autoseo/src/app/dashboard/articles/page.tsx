@@ -45,7 +45,13 @@ export default function ArticlesPage() {
     if (!genSiteId || !genKeyword) return
     setGenerating(true)
     try {
-      await generateArticle({ siteId: genSiteId, keyword: genKeyword })
+      const selectedSite = sites.find((s: any) => s.id === genSiteId)
+      await generateArticle({
+        siteId: genSiteId,
+        keyword: genKeyword,
+        niche: selectedSite?.niche || 'general',
+        language: selectedSite?.language || 'fr',
+      })
       toast.success('Article genere avec succes !')
       setShowGenerate(false)
       setGenKeyword('')
