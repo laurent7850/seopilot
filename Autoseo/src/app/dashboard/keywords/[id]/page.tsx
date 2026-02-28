@@ -228,8 +228,8 @@ export default function KeywordHistoryPage() {
                   label={{ value: 'Position', angle: -90, position: 'insideLeft', style: { fontSize: 12, fill: '#9ca3af' } }}
                 />
                 <Tooltip
-                  formatter={(val: number) => [`Position ${val}`, '']}
-                  labelFormatter={(label: string) => new Date(label).toLocaleDateString('fr-FR')}
+                  formatter={(val: any) => [`Position ${val}`, '']}
+                  labelFormatter={(label: any) => new Date(label).toLocaleDateString('fr-FR')}
                   contentStyle={{
                     borderRadius: 8,
                     border: '1px solid #e5e7eb',
