@@ -2,7 +2,7 @@ FROM node:20-alpine AS base
 
 # Dependencies
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --only=production && cp -R node_modules /prod_modules
@@ -10,6 +10,7 @@ RUN npm ci
 
 # Build
 FROM base AS builder
+RUN apk add --no-cache openssl
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
