@@ -14,6 +14,7 @@ import {
   Calendar,
   ClipboardCheck,
   Settings,
+  BookOpen,
   Zap,
   Menu,
   X,
@@ -36,6 +37,7 @@ const navigation = [
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Calendrier', href: '/dashboard/calendar', icon: Calendar },
   { name: 'Audit SEO', href: '/dashboard/audit', icon: ClipboardCheck },
+  { name: 'Guide', href: '/dashboard/guide', icon: BookOpen },
   { name: 'Parametres', href: '/dashboard/settings', icon: Settings },
 ]
 
