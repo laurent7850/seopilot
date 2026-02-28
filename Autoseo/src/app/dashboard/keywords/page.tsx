@@ -50,7 +50,13 @@ export default function KeywordsPage() {
     if (!researchSiteId || !researchNiche) return
     setResearching(true)
     try {
-      await researchKeywords({ siteId: researchSiteId, niche: researchNiche })
+      const selectedSite = sites.find((s: any) => s.id === researchSiteId)
+      await researchKeywords({
+        siteId: researchSiteId,
+        niche: researchNiche,
+        seedKeywords: [researchNiche],
+        language: selectedSite?.language || 'fr',
+      })
       setShowResearch(false)
       setResearchNiche('')
       setResearchSiteId('')

@@ -246,6 +246,7 @@ export async function generateArticle(data: {
 export async function researchKeywords(data: {
   siteId: string
   niche: string
+  seedKeywords?: string[]
   language?: string
   count?: number
 }) {
