@@ -154,6 +154,7 @@ model Article {
   wordpressPostId String?
   wordCount       Int           @default(0)
   seoScore        Float?
+  featuredImage   String?
   createdAt       DateTime      @default(now())
 
   site            Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)

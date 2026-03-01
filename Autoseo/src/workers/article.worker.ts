@@ -33,6 +33,10 @@ async function processArticleJob(job: Job<ArticleJobData>) {
 
   await job.updateProgress(60)
 
+  // Fetch a featured image from Unsplash
+  const { fetchUnsplashImage } = await import('../services/unsplash')
+  const featuredImage = await fetchUnsplashImage(keyword)
+
   // Save to database
   const article = await prisma.article.create({
     data: {
@@ -43,6 +47,7 @@ async function processArticleJob(job: Job<ArticleJobData>) {
       metaTitle: generated.metaTitle,
       metaDescription: generated.metaDescription,
       wordCount: generated.wordCount,
+      featuredImage,
       status: 'DRAFT',
     },
   })
@@ -95,6 +100,7 @@ async function processArticleJob(job: Job<ArticleJobData>) {
             metaTitle: generated.metaTitle,
             metaDescription: generated.metaDescription,
             wordCount: generated.wordCount,
+            featuredImage,
           },
         })
         if (result.success) {

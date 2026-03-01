@@ -72,6 +72,7 @@ async function processPublishJob(job: Job<PublishJobData>) {
         metaTitle: article.metaTitle,
         metaDescription: article.metaDescription,
         wordCount: article.wordCount,
+        featuredImage: article.featuredImage,
       },
     })
 

@@ -6,6 +6,7 @@ import { generateArticle } from '@/services/article-generator'
 import { calculateSeoScore } from '@/services/seo-scorer'
 import { getArticleQueue } from '@/lib/queue'
 import { publishViaWebhook } from '@/services/publisher'
+import { fetchUnsplashImage } from '@/services/unsplash'
 
 export async function POST(request: NextRequest) {
   try {
@@ -82,6 +83,9 @@ export async function POST(request: NextRequest) {
       wordCount: generated.wordCount,
     })
 
+    // Fetch a featured image from Unsplash
+    const featuredImage = await fetchUnsplashImage(keyword)
+
     // Save the article to the database
     const article = await prisma.article.create({
       data: {
@@ -93,6 +97,7 @@ export async function POST(request: NextRequest) {
         metaDescription: generated.metaDescription,
         wordCount: generated.wordCount,
         seoScore: seoResult.score,
+        featuredImage,
         status: 'PUBLISHED',
         publishedAt: new Date(),
       },
@@ -116,6 +121,7 @@ export async function POST(request: NextRequest) {
           metaTitle: generated.metaTitle,
           metaDescription: generated.metaDescription,
           wordCount: generated.wordCount,
+          featuredImage,
         },
       })
 
