@@ -21,6 +21,7 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-noreply@seopilot.fr}
+      - UNSPLASH_ACCESS_KEY=${UNSPLASH_ACCESS_KEY:-}
       - NODE_ENV=production
       - PORT=3000
     labels:
@@ -53,6 +54,7 @@ services:
       - REDIS_URL=redis://seopilot-redis:6379
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - UNSPLASH_ACCESS_KEY=${UNSPLASH_ACCESS_KEY:-}
     depends_on:
       seopilot-postgres:
         condition: service_healthy
