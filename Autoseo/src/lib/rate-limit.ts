@@ -56,7 +56,5 @@ export function rateLimit(config: RateLimitConfig = { interval: 60_000, maxReque
 }
 
 // Pre-configured rate limiters
-export const apiRateLimit = rateLimit({ interval: 60_000, maxRequests: 60 })
 export const authRateLimit = rateLimit({ interval: 60_000, maxRequests: 10 })
 export const aiRateLimit = rateLimit({ interval: 60_000, maxRequests: 5 })
-export const generateRateLimit = rateLimit({ interval: 60_000, maxRequests: 10 })

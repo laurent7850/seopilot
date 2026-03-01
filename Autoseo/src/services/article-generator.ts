@@ -1,4 +1,5 @@
 import { getOpenAI } from '@/lib/openai'
+import { slugify } from '@/lib/utils'
 
 export interface GenerateArticleParams {
   keyword: string
@@ -85,11 +86,7 @@ Important:
   }
 
   // Sanitize slug
-  parsed.slug = parsed.slug
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
+  parsed.slug = slugify(parsed.slug)
 
   return parsed
 }

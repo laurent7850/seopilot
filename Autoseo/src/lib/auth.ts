@@ -12,8 +12,6 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/login',
-    // @ts-ignore - custom page for sign up
-    signUp: '/register',
   },
   providers: [
     CredentialsProvider({
