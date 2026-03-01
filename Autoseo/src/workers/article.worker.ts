@@ -12,10 +12,11 @@ export interface ArticleJobData {
   tone?: string
   wordCount?: number
   autoPublish?: boolean
+  scheduledAt?: string
 }
 
 async function processArticleJob(job: Job<ArticleJobData>) {
-  const { siteId, keyword, niche, language, tone, wordCount, autoPublish } = job.data
+  const { siteId, keyword, niche, language, tone, wordCount, autoPublish, scheduledAt } = job.data
 
   await job.updateProgress(10)
   console.log(`[article-worker] Generating article for "${keyword}" (site: ${siteId})`)
@@ -37,6 +38,10 @@ async function processArticleJob(job: Job<ArticleJobData>) {
   const { fetchUnsplashImage } = await import('../services/unsplash')
   const featuredImage = await fetchUnsplashImage(keyword)
 
+  // Determine initial status based on scheduling
+  const initialStatus = scheduledAt && !autoPublish ? 'SCHEDULED' : 'DRAFT'
+  const initialScheduledAt = scheduledAt && !autoPublish ? new Date(scheduledAt) : null
+
   // Save to database
   const article = await prisma.article.create({
     data: {
@@ -48,13 +53,14 @@ async function processArticleJob(job: Job<ArticleJobData>) {
       metaDescription: generated.metaDescription,
       wordCount: generated.wordCount,
       featuredImage,
-      status: 'DRAFT',
+      status: initialStatus,
+      scheduledAt: initialScheduledAt,
     },
   })
 
   await job.updateProgress(80)
 
-  // Auto-publish if requested
+  // Auto-publish if requested (takes priority over scheduling)
   if (autoPublish) {
     const site = await prisma.site.findUnique({ where: { id: siteId } })
     if (site) {

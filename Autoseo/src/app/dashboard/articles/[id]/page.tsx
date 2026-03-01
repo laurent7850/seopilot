@@ -16,6 +16,8 @@ import {
   Save,
   X,
   Send,
+  Clock,
+  CalendarIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
@@ -40,6 +42,10 @@ export default function ArticleDetailPage() {
   const [deleting, setDeleting] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showScheduler, setShowScheduler] = useState(false)
+  const [scheduling, setScheduling] = useState(false)
+  const [schedDate, setSchedDate] = useState('')
+  const [schedTime, setSchedTime] = useState('09:00')
 
   // Edit fields
   const [editTitle, setEditTitle] = useState('')
@@ -117,6 +123,42 @@ export default function ArticleDetailPage() {
     }
   }
 
+  const handleSchedule = async () => {
+    if (!schedDate) {
+      toast.error('Veuillez choisir une date')
+      return
+    }
+    setScheduling(true)
+    try {
+      const scheduledAt = new Date(`${schedDate}T${schedTime}:00`).toISOString()
+      await updateArticle(id, { scheduledAt })
+      toast.success('Article planifie avec succes')
+      setShowScheduler(false)
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setScheduling(false)
+    }
+  }
+
+  const handleCancelSchedule = async () => {
+    setScheduling(true)
+    try {
+      await updateArticle(id, { scheduledAt: null })
+      toast.success('Planification annulee')
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setScheduling(false)
+    }
+  }
+
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  const minDate = tomorrow.toISOString().split('T')[0]
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -181,15 +223,26 @@ export default function ArticleDetailPage() {
                 Modifier
               </Button>
               {article.status !== 'PUBLISHED' && (
-                <Button
-                  size="sm"
-                  className="gap-2 bg-green-600 hover:bg-green-700"
-                  onClick={handlePublish}
-                  disabled={publishing}
-                >
-                  {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  Publier
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 text-yellow-700 hover:bg-yellow-50"
+                    onClick={() => setShowScheduler(!showScheduler)}
+                  >
+                    <Clock className="h-4 w-4" />
+                    Planifier
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-green-600 hover:bg-green-700"
+                    onClick={handlePublish}
+                    disabled={publishing}
+                  >
+                    {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    Publier
+                  </Button>
+                </>
               )}
             </>
           )}
@@ -216,6 +269,77 @@ export default function ArticleDetailPage() {
           </Button>
         </div>
       </div>
+
+      {/* Scheduled info */}
+      {article.status === 'SCHEDULED' && article.scheduledAt && (
+        <div className="flex items-center justify-between rounded-xl border border-yellow-200 bg-yellow-50 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <CalendarIcon className="h-5 w-5 text-yellow-600" />
+            <div>
+              <p className="text-sm font-medium text-yellow-800">
+                Publication planifiee le {new Date(article.scheduledAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} a {new Date(article.scheduledAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 text-yellow-700 hover:bg-yellow-100"
+            onClick={handleCancelSchedule}
+            disabled={scheduling}
+          >
+            {scheduling ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+            Annuler
+          </Button>
+        </div>
+      )}
+
+      {/* Schedule picker */}
+      {showScheduler && article.status !== 'PUBLISHED' && (
+        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-5">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-yellow-800">
+            <Clock className="h-4 w-4" />
+            Planifier la publication
+          </h3>
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <div>
+              <label className="block text-xs font-medium text-yellow-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={schedDate}
+                onChange={(e) => setSchedDate(e.target.value)}
+                min={minDate}
+                className="rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-yellow-700 mb-1">Heure</label>
+              <input
+                type="time"
+                value={schedTime}
+                onChange={(e) => setSchedTime(e.target.value)}
+                className="rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm"
+              />
+            </div>
+            <Button
+              size="sm"
+              className="gap-2 bg-yellow-600 hover:bg-yellow-700 text-white"
+              onClick={handleSchedule}
+              disabled={scheduling || !schedDate}
+            >
+              {scheduling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              Confirmer
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowScheduler(false)}
+            >
+              Annuler
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Meta info */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

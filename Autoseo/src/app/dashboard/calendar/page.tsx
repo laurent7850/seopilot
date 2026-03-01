@@ -8,10 +8,14 @@ import {
   FileText,
   Calendar as CalendarIcon,
   Loader2,
+  Clock,
+  Check,
+  X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
-import { useArticles, useSites } from '@/hooks/use-api'
+import { useArticles, useSites, updateArticle } from '@/hooks/use-api'
 
 const DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 const MONTHS_FR = [
@@ -38,12 +42,23 @@ function getFirstDayOfMonth(year: number, month: number) {
 
 export default function CalendarPage() {
   const today = new Date()
+  const toast = useToast()
   const [currentMonth, setCurrentMonth] = useState(today.getMonth())
   const [currentYear, setCurrentYear] = useState(today.getFullYear())
   const [selectedSiteId, setSelectedSiteId] = useState<string | undefined>(undefined)
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
+  const [schedArticleId, setSchedArticleId] = useState('')
+  const [schedTime, setSchedTime] = useState('09:00')
+  const [scheduling, setScheduling] = useState(false)
 
-  const { articles, loading } = useArticles(selectedSiteId)
+  const { articles, loading, refetch } = useArticles(selectedSiteId)
   const { sites } = useSites()
+
+  // Draft articles available for scheduling
+  const draftArticles = useMemo(
+    () => articles.filter((a: any) => a.status === 'DRAFT'),
+    [articles]
+  )
 
   // Group articles by date
   const articlesByDate = useMemo(() => {
@@ -99,6 +114,37 @@ export default function CalendarPage() {
     const m = String(currentMonth + 1).padStart(2, '0')
     const d = String(day).padStart(2, '0')
     return `${currentYear}-${m}-${d}`
+  }
+
+  const isFutureDay = (day: number) => {
+    const date = new Date(currentYear, currentMonth, day)
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    return date > todayStart
+  }
+
+  const handleDayClick = (day: number) => {
+    if (!isFutureDay(day)) return
+    setSelectedDay(selectedDay === day ? null : day)
+    setSchedArticleId('')
+    setSchedTime('09:00')
+  }
+
+  const handleScheduleFromCalendar = async () => {
+    if (!schedArticleId || selectedDay === null) return
+    setScheduling(true)
+    try {
+      const dateKey = getDateKey(selectedDay)
+      const scheduledAt = new Date(`${dateKey}T${schedTime}:00`).toISOString()
+      await updateArticle(schedArticleId, { scheduledAt })
+      toast.success('Article planifie avec succes')
+      setSelectedDay(null)
+      setSchedArticleId('')
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setScheduling(false)
+    }
   }
 
   return (
@@ -169,14 +215,20 @@ export default function CalendarPage() {
                 const dateKey = getDateKey(day)
                 const dayArticles = articlesByDate[dateKey] || []
 
+                const future = isFutureDay(day)
+
                 return (
                   <div
                     key={day}
+                    onClick={() => future && handleDayClick(day)}
                     className={cn(
                       'min-h-[100px] rounded-lg border p-2 transition-colors',
                       isToday(day)
                         ? 'border-brand-300 bg-brand-50'
-                        : 'border-gray-100 bg-white hover:bg-gray-50'
+                        : selectedDay === day
+                        ? 'border-yellow-300 bg-yellow-50'
+                        : 'border-gray-100 bg-white hover:bg-gray-50',
+                      future && 'cursor-pointer'
                     )}
                   >
                     <span
@@ -216,6 +268,58 @@ export default function CalendarPage() {
           </div>
         )}
       </div>
+
+      {/* Schedule panel */}
+      {selectedDay !== null && (
+        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-yellow-800">
+              <Clock className="h-4 w-4" />
+              Planifier pour le {selectedDay} {MONTHS_FR[currentMonth]} {currentYear}
+            </h3>
+            <button onClick={() => setSelectedDay(null)} className="text-yellow-600 hover:text-yellow-800">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          {draftArticles.length === 0 ? (
+            <p className="mt-3 text-sm text-yellow-700">Aucun article en brouillon disponible.</p>
+          ) : (
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs font-medium text-yellow-700 mb-1">Article</label>
+                <select
+                  value={schedArticleId}
+                  onChange={(e) => setSchedArticleId(e.target.value)}
+                  className="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm"
+                >
+                  <option value="">Choisir un article...</option>
+                  {draftArticles.map((a: any) => (
+                    <option key={a.id} value={a.id}>{a.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-yellow-700 mb-1">Heure</label>
+                <input
+                  type="time"
+                  value={schedTime}
+                  onChange={(e) => setSchedTime(e.target.value)}
+                  className="rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm"
+                />
+              </div>
+              <Button
+                size="sm"
+                className="gap-2 bg-yellow-600 hover:bg-yellow-700 text-white"
+                onClick={handleScheduleFromCalendar}
+                disabled={scheduling || !schedArticleId}
+              >
+                {scheduling ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                Planifier
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-4 text-xs">

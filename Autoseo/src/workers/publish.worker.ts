@@ -1,15 +1,47 @@
 import { Worker, Job } from 'bullmq'
 import { PrismaClient } from '@prisma/client'
 import { getRedisConnection } from '../lib/redis'
+import { getPublishQueue } from '../lib/queue'
 
 const prisma = new PrismaClient()
 
 export interface PublishJobData {
-  articleId: string
+  articleId?: string
+  scheduled?: boolean
+}
+
+async function checkScheduledArticles() {
+  const now = new Date()
+  const articles = await prisma.article.findMany({
+    where: { status: 'SCHEDULED', scheduledAt: { lte: now } },
+    select: { id: true, title: true },
+  })
+
+  if (articles.length === 0) {
+    console.log('[publish-worker] No scheduled articles due for publishing')
+    return { queued: 0 }
+  }
+
+  const publishQueue = getPublishQueue()
+  for (const article of articles) {
+    await publishQueue.add('article-publish', { articleId: article.id })
+    console.log(`[publish-worker] Queued scheduled article "${article.title}" (${article.id})`)
+  }
+
+  console.log(`[publish-worker] Queued ${articles.length} scheduled article(s) for publishing`)
+  return { queued: articles.length }
 }
 
 async function processPublishJob(job: Job<PublishJobData>) {
+  // Handle the check-scheduled cron job
+  if (job.name === 'check-scheduled') {
+    return checkScheduledArticles()
+  }
+
   const { articleId } = job.data
+  if (!articleId) {
+    throw new Error('Missing articleId in job data')
+  }
 
   console.log(`[publish-worker] Publishing article ${articleId}`)
 

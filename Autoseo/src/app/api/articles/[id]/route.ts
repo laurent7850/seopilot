@@ -80,9 +80,27 @@ export async function PATCH(
       seoScore = seoResult.score
     }
 
-    // Set publishedAt when status changes to PUBLISHED
-    const newStatus = body.status ?? article.status
+    // Handle scheduledAt for article scheduling
+    let newStatus = body.status ?? article.status
+    let scheduledAt = article.scheduledAt
     let publishedAt = article.publishedAt
+
+    if (body.scheduledAt !== undefined) {
+      if (body.scheduledAt === null) {
+        // Cancel scheduling
+        scheduledAt = null
+        newStatus = 'DRAFT'
+      } else {
+        const schedDate = new Date(body.scheduledAt)
+        if (isNaN(schedDate.getTime())) {
+          return NextResponse.json({ error: 'Invalid scheduledAt date' }, { status: 400 })
+        }
+        scheduledAt = schedDate
+        newStatus = 'SCHEDULED'
+      }
+    }
+
+    // Set publishedAt when status changes to PUBLISHED
     if (newStatus === 'PUBLISHED' && article.status !== 'PUBLISHED') {
       publishedAt = new Date()
     }
@@ -98,6 +116,7 @@ export async function PATCH(
         status: newStatus,
         seoScore,
         publishedAt,
+        scheduledAt,
       },
     })
 
