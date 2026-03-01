@@ -10,13 +10,15 @@ import {
   Search,
   Link2,
   ArrowLeft,
-  Settings,
+  Edit3,
+  Save,
+  X,
   Sparkles,
   Loader2,
   Trash2,
   CheckCircle,
-  XCircle,
   BarChart3,
+  Webhook,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
@@ -43,23 +45,51 @@ export default function SiteDetailPage() {
 
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [editName, setEditName] = useState('')
-  const [editNiche, setEditNiche] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [genKeyword, setGenKeyword] = useState('')
   const [connectingGSC, setConnectingGSC] = useState(false)
 
+  // Edit fields
+  const [editName, setEditName] = useState('')
+  const [editNiche, setEditNiche] = useState('')
+  const [editLanguage, setEditLanguage] = useState('')
+  const [editMarket, setEditMarket] = useState('')
+  const [editWebhookUrl, setEditWebhookUrl] = useState('')
+  const [editWebhookSecret, setEditWebhookSecret] = useState('')
+  const [editWordpressUrl, setEditWordpressUrl] = useState('')
+  const [editWordpressApiKey, setEditWordpressApiKey] = useState('')
+  const [editIsActive, setEditIsActive] = useState(true)
+
   const startEdit = () => {
-    setEditName(site?.name || '')
-    setEditNiche(site?.niche || '')
+    if (!site) return
+    setEditName(site.name)
+    setEditNiche(site.niche || '')
+    setEditLanguage(site.language || 'fr')
+    setEditMarket(site.market || 'FR')
+    setEditWebhookUrl(site.webhookUrl || '')
+    setEditWebhookSecret(site.webhookSecret || '')
+    setEditWordpressUrl(site.wordpressUrl || '')
+    setEditWordpressApiKey(site.wordpressApiKey || '')
+    setEditIsActive(site.isActive)
     setEditing(true)
   }
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      await updateSite(id, { name: editName, niche: editNiche })
+      await updateSite(id, {
+        name: editName,
+        niche: editNiche || null,
+        language: editLanguage,
+        market: editMarket,
+        webhookUrl: editWebhookUrl || null,
+        webhookSecret: editWebhookSecret || null,
+        wordpressUrl: editWordpressUrl || null,
+        wordpressApiKey: editWordpressApiKey || null,
+        isActive: editIsActive,
+      })
       toast.success('Site mis a jour')
       setEditing(false)
       refetch()
@@ -71,7 +101,6 @@ export default function SiteDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (!confirm(`Supprimer le site "${site?.name}" et toutes ses donnees ?`)) return
     setDeleting(true)
     try {
       await deleteSite(id)
@@ -147,33 +176,16 @@ export default function SiteDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div className="flex-1">
-          {editing ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-lg font-bold"
-              />
-              <Button size="sm" onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Enregistrer'}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
-                Annuler
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-gray-900">{site.name}</h2>
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  site.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                }`}
-              >
-                {site.isActive ? 'Actif' : 'Inactif'}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold text-gray-900">{site.name}</h2>
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                site.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+              }`}
+            >
+              {site.isActive ? 'Actif' : 'Inactif'}
+            </span>
+          </div>
           <a
             href={site.url}
             target="_blank"
@@ -185,19 +197,23 @@ export default function SiteDetailPage() {
           </a>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={startEdit}>
-            <Settings className="h-4 w-4" />
-            Modifier
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 text-red-600 hover:bg-red-50 hover:text-red-700"
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          </Button>
+          {!editing ? (
+            <Button variant="outline" size="sm" className="gap-2" onClick={startEdit}>
+              <Edit3 className="h-4 w-4" />
+              Modifier
+            </Button>
+          ) : (
+            <>
+              <Button size="sm" className="gap-2" onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Enregistrer
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setEditing(false)}>
+                <X className="h-4 w-4" />
+                Annuler
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -241,6 +257,115 @@ export default function SiteDetailPage() {
           <Button onClick={handleGenerate} disabled={generating || !genKeyword.trim()}>
             {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Generer'}
           </Button>
+        </div>
+      </div>
+
+      {/* Informations generales (editable) */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 className="flex items-center gap-2 border-b border-gray-100 pb-4 text-sm font-semibold text-gray-900">
+          <Globe className="h-4 w-4 text-gray-400" />
+          Informations generales
+        </h3>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Nom</span>
+            {editing ? (
+              <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            ) : (
+              <p className="mt-1 text-sm font-medium text-gray-900">{site.name}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Niche</span>
+            {editing ? (
+              <input type="text" value={editNiche} onChange={(e) => setEditNiche(e.target.value)} placeholder="ex: Marketing digital" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            ) : (
+              <p className="mt-1 text-sm font-medium text-gray-900">{site.niche || '-'}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Langue</span>
+            {editing ? (
+              <select value={editLanguage} onChange={(e) => setEditLanguage(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm">
+                <option value="fr">Francais</option>
+                <option value="en">English</option>
+                <option value="es">Espanol</option>
+                <option value="de">Deutsch</option>
+                <option value="it">Italiano</option>
+                <option value="pt">Portugues</option>
+              </select>
+            ) : (
+              <p className="mt-1 text-sm font-medium text-gray-900">
+                {site.language === 'fr' ? 'Francais' : site.language === 'en' ? 'English' : site.language}
+              </p>
+            )}
+          </div>
+          <div>
+            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Marche</span>
+            {editing ? (
+              <input type="text" value={editMarket} onChange={(e) => setEditMarket(e.target.value)} placeholder="ex: FR" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            ) : (
+              <p className="mt-1 text-sm font-medium text-gray-900">{site.market || '-'}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Cree le</span>
+            <p className="mt-1 text-sm font-medium text-gray-900">{new Date(site.createdAt).toLocaleDateString('fr-FR')}</p>
+          </div>
+          {editing && (
+            <div>
+              <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Statut</span>
+              <div className="mt-1 flex items-center gap-3">
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input type="checkbox" checked={editIsActive} onChange={(e) => setEditIsActive(e.target.checked)} className="peer sr-only" />
+                  <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-brand-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
+                </label>
+                <span className="text-sm text-gray-700">{editIsActive ? 'Actif' : 'Inactif'}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Publication config (editable) */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 className="flex items-center gap-2 border-b border-gray-100 pb-4 text-sm font-semibold text-gray-900">
+          <Webhook className="h-4 w-4 text-gray-400" />
+          Configuration de publication
+        </h3>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Webhook URL</span>
+            {editing ? (
+              <input type="text" value={editWebhookUrl} onChange={(e) => setEditWebhookUrl(e.target.value)} placeholder="/api/receive-article" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            ) : (
+              <p className="mt-1 text-sm font-medium text-gray-900">{site.webhookUrl || 'Non configure'}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Webhook Secret</span>
+            {editing ? (
+              <input type="password" value={editWebhookSecret} onChange={(e) => setEditWebhookSecret(e.target.value)} placeholder="Secret optionnel" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            ) : (
+              <p className="mt-1 text-sm font-medium text-gray-900">{site.webhookSecret ? '••••••••' : 'Non configure'}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">WordPress URL</span>
+            {editing ? (
+              <input type="text" value={editWordpressUrl} onChange={(e) => setEditWordpressUrl(e.target.value)} placeholder="https://votresite.com" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            ) : (
+              <p className="mt-1 text-sm font-medium text-gray-900">{site.wordpressUrl || 'Non configure'}</p>
+            )}
+          </div>
+          <div>
+            <span className="text-xs font-medium uppercase tracking-wider text-gray-500">WordPress API Key</span>
+            {editing ? (
+              <input type="password" value={editWordpressApiKey} onChange={(e) => setEditWordpressApiKey(e.target.value)} placeholder="Cle API WordPress" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            ) : (
+              <p className="mt-1 text-sm font-medium text-gray-900">{site.wordpressApiKey ? '••••••••' : 'Non configure'}</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -311,24 +436,39 @@ export default function SiteDetailPage() {
         )}
       </div>
 
-      {/* Site info */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-900">Informations</h3>
-        <dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {[
-            { label: 'Niche', value: site.niche || '-' },
-            { label: 'Langue', value: site.language === 'fr' ? 'Francais' : site.language === 'en' ? 'English' : site.language },
-            { label: 'Marche', value: site.market || '-' },
-            { label: 'WordPress', value: site.wordpressUrl ? 'Connecte' : 'Non connecte' },
-            { label: 'Webhook', value: site.webhookUrl ? 'Configure' : 'Non configure' },
-            { label: 'Cree le', value: new Date(site.createdAt).toLocaleDateString('fr-FR') },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
-              <span className="text-xs text-gray-500">{item.label}</span>
-              <span className="text-sm font-medium text-gray-900">{item.value}</span>
-            </div>
-          ))}
-        </dl>
+      {/* Danger zone */}
+      <div className="rounded-xl border border-red-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-red-800">Zone de danger</h3>
+        <p className="mt-1 text-sm text-gray-600">
+          Supprimer ce site supprimera aussi tous ses articles, mots-cles, backlinks et analytics.
+        </p>
+        {!showDeleteConfirm ? (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="mt-4 gap-2"
+            onClick={() => setShowDeleteConfirm(true)}
+          >
+            <Trash2 className="h-4 w-4" />
+            Supprimer ce site
+          </Button>
+        ) : (
+          <div className="mt-4 flex items-center gap-3">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Confirmer la suppression
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>
+              Annuler
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )

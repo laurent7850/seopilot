@@ -78,6 +78,16 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
 // --------------------------------------------------------------------------
 // User
 // --------------------------------------------------------------------------
@@ -96,11 +106,33 @@ model User {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  accounts     Account[]
-  sessions     Session[]
-  sites        Site[]
+  accounts      Account[]
+  sessions      Session[]
+  sites         Site[]
+  notifications Notification[]
 
   @@index([email])
+}
+
+// --------------------------------------------------------------------------
+// Notification
+// --------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // article_generated, backlink_lost, backlink_found, weekly_report
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
 }
 
 // --------------------------------------------------------------------------

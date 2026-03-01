@@ -14,8 +14,11 @@ import {
   Trash2,
   Loader2,
   Sparkles,
+  Plus,
+  RefreshCw,
+  X,
 } from 'lucide-react'
-import { useBacklinks, deleteBacklink } from '@/hooks/use-api'
+import { useBacklinks, useSites, deleteBacklink, checkBacklinksApi } from '@/hooks/use-api'
 import { useToast } from '@/components/ui/toast'
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
@@ -28,7 +31,18 @@ export default function BacklinksPage() {
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [checkingId, setCheckingId] = useState<string | null>(null)
   const toast = useToast()
+
+  // Add backlink form
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [addSiteId, setAddSiteId] = useState('')
+  const [addSourceUrl, setAddSourceUrl] = useState('')
+  const [addTargetUrl, setAddTargetUrl] = useState('')
+  const [addAnchorText, setAddAnchorText] = useState('')
+  const [addDA, setAddDA] = useState('')
+  const [adding, setAdding] = useState(false)
+  const { sites } = useSites()
 
   const { backlinks, loading, error, refetch } = useBacklinks(
     undefined,
@@ -63,17 +77,140 @@ export default function BacklinksPage() {
     }
   }
 
+  const handleAdd = async () => {
+    if (!addSiteId || !addSourceUrl || !addTargetUrl) {
+      toast.error('Site, URL source et URL cible sont requis')
+      return
+    }
+    setAdding(true)
+    try {
+      const res = await fetch('/api/backlinks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siteId: addSiteId,
+          sourceUrl: addSourceUrl,
+          targetUrl: addTargetUrl,
+          anchorText: addAnchorText || null,
+          domainAuthority: addDA ? parseFloat(addDA) : null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      toast.success('Backlink ajoute')
+      setShowAddForm(false)
+      setAddSourceUrl('')
+      setAddTargetUrl('')
+      setAddAnchorText('')
+      setAddDA('')
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setAdding(false)
+    }
+  }
+
+  const handleCheck = async (backlinkId: string, siteId: string) => {
+    setCheckingId(backlinkId)
+    try {
+      await checkBacklinksApi(siteId, [backlinkId])
+      toast.success('Verification terminee')
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setCheckingId(null)
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Backlinks</h1>
-        <Link href="/dashboard/backlinks/suggestions">
-          <Button className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            Suggestions IA
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setShowAddForm(!showAddForm)}>
+            {showAddForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {showAddForm ? 'Fermer' : 'Ajouter'}
           </Button>
-        </Link>
+          <Link href="/dashboard/backlinks/suggestions">
+            <Button className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Suggestions IA
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {/* Add backlink form */}
+      {showAddForm && (
+        <div className="rounded-xl border border-brand-200 bg-brand-50/30 p-5">
+          <h3 className="text-sm font-semibold text-gray-900">Ajouter un backlink manuellement</h3>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm text-gray-700">Site *</label>
+              <select
+                value={addSiteId}
+                onChange={(e) => setAddSiteId(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              >
+                <option value="">Selectionner un site</option>
+                {sites.map((s: any) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700">URL source *</label>
+              <input
+                type="url"
+                value={addSourceUrl}
+                onChange={(e) => setAddSourceUrl(e.target.value)}
+                placeholder="https://blog-externe.com/article"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700">URL cible *</label>
+              <input
+                type="url"
+                value={addTargetUrl}
+                onChange={(e) => setAddTargetUrl(e.target.value)}
+                placeholder="https://monsite.com/page"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700">Texte d&apos;ancre</label>
+              <input
+                type="text"
+                value={addAnchorText}
+                onChange={(e) => setAddAnchorText(e.target.value)}
+                placeholder="Optionnel"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700">Domain Authority</label>
+              <input
+                type="number"
+                value={addDA}
+                onChange={(e) => setAddDA(e.target.value)}
+                placeholder="0-100"
+                min="0"
+                max="100"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <Button onClick={handleAdd} disabled={adding || !addSiteId || !addSourceUrl || !addTargetUrl} className="gap-2">
+              {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Ajouter le backlink
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -190,17 +327,32 @@ export default function BacklinksPage() {
                       {new Date(bl.createdAt).toLocaleDateString('fr-FR')}
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleDelete(bl.id)}
-                        disabled={deletingId === bl.id}
-                        className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                      >
-                        {deletingId === bl.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleCheck(bl.id, bl.siteId)}
+                          disabled={checkingId === bl.id}
+                          className="rounded-lg p-1 text-gray-400 hover:bg-blue-50 hover:text-blue-500"
+                          title="Verifier le statut"
+                        >
+                          {checkingId === bl.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-4 w-4" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDelete(bl.id)}
+                          disabled={deletingId === bl.id}
+                          className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                          title="Supprimer"
+                        >
+                          {deletingId === bl.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
