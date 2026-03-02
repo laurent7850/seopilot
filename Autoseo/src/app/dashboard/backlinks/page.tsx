@@ -17,6 +17,7 @@ import {
   Plus,
   RefreshCw,
   X,
+  Users,
 } from 'lucide-react'
 import { useBacklinks, useSites, deleteBacklink, checkBacklinksApi } from '@/hooks/use-api'
 import { useToast } from '@/components/ui/toast'
@@ -133,6 +134,12 @@ export default function BacklinksPage() {
             {showAddForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             {showAddForm ? 'Fermer' : 'Ajouter'}
           </Button>
+          <Link href="/dashboard/backlinks/competitors">
+            <Button variant="outline" className="gap-2">
+              <Users className="h-4 w-4" />
+              Analyse concurrents
+            </Button>
+          </Link>
           <Link href="/dashboard/backlinks/suggestions">
             <Button className="gap-2">
               <Sparkles className="h-4 w-4" />
