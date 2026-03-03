@@ -79,10 +79,21 @@ export async function generateSiteReport(siteId: string, userId: string): Promis
     }),
   ])
 
-  // Parse audit checks if available
-  const auditChecks: AuditCheck[] = latestAudit?.checks
-    ? (latestAudit.checks as unknown as AuditCheck[])
-    : []
+  // Parse audit checks if available (stored as categories object)
+  let auditChecks: AuditCheck[] = []
+  if (latestAudit?.checks) {
+    const raw = latestAudit.checks as any
+    if (Array.isArray(raw)) {
+      auditChecks = raw
+    } else if (typeof raw === 'object') {
+      // Stored as { technical: { checks: [...] }, content: { checks: [...] }, ... }
+      for (const cat of Object.values(raw) as any[]) {
+        if (cat?.checks && Array.isArray(cat.checks)) {
+          auditChecks.push(...cat.checks)
+        }
+      }
+    }
+  }
 
   // Create PDF document
   const doc = new PDFDocument({
