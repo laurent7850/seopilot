@@ -655,9 +655,10 @@ async function checkPageSpeed(url: string): Promise<{ check: AuditCheck; vitals?
 }
 
 export async function runTechnicalAudit(siteUrl: string): Promise<TechnicalAuditResult> {
-  // Normalize URL
-  let url = siteUrl
-  if (!url.startsWith('http')) url = `https://${url}`
+  // Normalize URL (case-insensitive protocol check)
+  let url = siteUrl.trim()
+  if (!/^https?:\/\//i.test(url)) url = `https://${url}`
+  else url = url.replace(/^Https?:\/\//i, (m) => m.toLowerCase())
   const parsedUrl = new URL(url)
   const hostname = parsedUrl.hostname
   const baseUrl = `${parsedUrl.protocol}//${parsedUrl.host}`
