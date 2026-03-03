@@ -15,6 +15,7 @@ import {
   Loader2,
   Trash2,
   BarChart3,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
@@ -29,9 +30,56 @@ export default function KeywordsPage() {
   const [researchNiche, setResearchNiche] = useState('')
   const [researching, setResearching] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState(false)
 
   const { keywords, loading, error, refetch } = useKeywords()
   const { sites } = useSites()
+
+  // Compute last sync time from keywords
+  const lastSyncedAt = keywords.reduce((latest: string | null, kw: any) => {
+    if (!kw.lastSyncedAt) return latest
+    if (!latest) return kw.lastSyncedAt
+    return new Date(kw.lastSyncedAt) > new Date(latest) ? kw.lastSyncedAt : latest
+  }, null)
+
+  const getTimeSinceSync = (dateStr: string): string => {
+    const diff = Date.now() - new Date(dateStr).getTime()
+    const minutes = Math.floor(diff / 60000)
+    if (minutes < 60) return `il y a ${minutes} min`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `il y a ${hours}h`
+    const days = Math.floor(hours / 24)
+    return `il y a ${days}j`
+  }
+
+  const handleGSCSync = async () => {
+    const firstSite = sites[0]
+    if (!firstSite) {
+      toast.error('Aucun site disponible pour la synchronisation.')
+      return
+    }
+    setSyncing(true)
+    try {
+      const res = await fetch('/api/integrations/gsc/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siteId: firstSite.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Erreur de synchronisation')
+      }
+      toast.success(`${data.synced} mot${data.synced > 1 ? 's' : ''}-cle${data.synced > 1 ? 's' : ''} synchronise${data.synced > 1 ? 's' : ''} depuis GSC`)
+      if (data.errors?.length > 0) {
+        console.warn('GSC sync warnings:', data.errors)
+      }
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la synchronisation GSC')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const filteredKeywords = keywords.filter(
     (kw: any) =>
@@ -97,10 +145,30 @@ export default function KeywordsPage() {
             Suivez le positionnement de vos mots-cles sur Google.
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setShowResearch(!showResearch)}>
-          <Plus className="h-4 w-4" />
-          Rechercher de nouveaux mots-cles
-        </Button>
+        <div className="flex items-center gap-3">
+          {lastSyncedAt && (
+            <span className="text-xs text-gray-400">
+              Derniere sync : {getTimeSinceSync(lastSyncedAt)}
+            </span>
+          )}
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleGSCSync}
+            disabled={syncing || sites.length === 0}
+          >
+            {syncing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            Sync GSC
+          </Button>
+          <Button className="gap-2" onClick={() => setShowResearch(!showResearch)}>
+            <Plus className="h-4 w-4" />
+            Rechercher de nouveaux mots-cles
+          </Button>
+        </div>
       </div>
 
       {showResearch && (
@@ -168,6 +236,9 @@ export default function KeywordsPage() {
                 <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Volume</th>
                 <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Difficulte</th>
                 <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Position</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Clics</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Impressions</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">CTR</th>
                 <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Tendance</th>
                 <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500"></th>
               </tr>
@@ -175,13 +246,13 @@ export default function KeywordsPage() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center">
+                  <td colSpan={9} className="px-5 py-12 text-center">
                     <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
                   </td>
                 </tr>
               ) : filteredKeywords.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={9} className="px-5 py-12 text-center text-sm text-gray-500">
                     Aucun mot-cle trouve.
                   </td>
                 </tr>
@@ -244,6 +315,15 @@ export default function KeywordsPage() {
                         ) : (
                           <span className="text-xs text-gray-400">-</span>
                         )}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-600">
+                        {kw.clicks ? kw.clicks.toLocaleString('fr-FR') : '-'}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-600">
+                        {kw.impressions ? kw.impressions.toLocaleString('fr-FR') : '-'}
+                      </td>
+                      <td className="px-5 py-4 text-sm text-gray-600">
+                        {kw.ctr ? `${(kw.ctr * 100).toFixed(1)}%` : '-'}
                       </td>
                       <td className="px-5 py-4">
                         <div

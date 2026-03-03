@@ -110,6 +110,7 @@ model User {
   sessions      Session[]
   sites         Site[]
   notifications Notification[]
+  progress      UserProgress[]
 
   @@index([email])
 }
@@ -162,6 +163,7 @@ model Site {
   keywords           Keyword[]
   backlinks          Backlink[]
   analyticsSnapshots AnalyticsSnapshot[]
+  audits             SiteAudit[]
 
   @@unique([userId, url])
   @@index([userId])
@@ -212,6 +214,10 @@ model Keyword {
   currentPosition  Float?
   previousPosition Float?
   trend            String?
+  clicks           Int?
+  impressions      Int?
+  ctr              Float?
+  lastSyncedAt     DateTime?
   createdAt        DateTime @default(now())
 
   site            Site             @relation(fields: [siteId], references: [id], onDelete: Cascade)
@@ -300,4 +306,38 @@ model AnalyticsSnapshot {
   @@index([siteId])
   @@index([date])
   @@index([siteId, date])
+}
+
+// --------------------------------------------------------------------------
+// SiteAudit (technical SEO audit results)
+// --------------------------------------------------------------------------
+
+model SiteAudit {
+  id            String   @id @default(cuid())
+  siteId        String
+  score         Int      // 0-100
+  checks        Json     // AuditCheck[] serialized
+  coreWebVitals Json?    // { lcp, cls, fcp, performanceScore, seoScore }
+  createdAt     DateTime @default(now())
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, createdAt])
+}
+
+// --------------------------------------------------------------------------
+// UserProgress (roadmap/guide progression)
+// --------------------------------------------------------------------------
+
+model UserProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  stepKey     String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, stepKey])
+  @@index([userId])
 }

@@ -21,6 +21,7 @@ export async function GET() {
       backlinksCount,
       activeBacklinks,
       recentArticles,
+      latestAudit,
     ] = await Promise.all([
       prisma.site.count({ where: { userId } }),
       prisma.article.count({ where: { site: { userId } } }),
@@ -36,6 +37,11 @@ export async function GET() {
         },
         orderBy: { createdAt: 'desc' },
         take: 5,
+      }),
+      prisma.siteAudit.findFirst({
+        where: { site: { userId } },
+        orderBy: { createdAt: 'desc' },
+        select: { score: true, createdAt: true, siteId: true },
       }),
     ])
 
@@ -56,6 +62,8 @@ export async function GET() {
         activeBacklinks,
         organicTraffic: latestSnapshot?.organicTraffic || 0,
         avgPosition: latestSnapshot?.avgPosition || null,
+        seoHealthScore: latestAudit?.score || null,
+        lastAuditDate: latestAudit?.createdAt || null,
       },
       recentArticles,
     })

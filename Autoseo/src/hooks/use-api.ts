@@ -52,6 +52,8 @@ interface DashboardStats {
     activeBacklinks: number
     organicTraffic: number
     avgPosition: number | null
+    seoHealthScore: number | null
+    lastAuditDate: string | null
   }
   recentArticles: any[]
 }
@@ -341,6 +343,106 @@ export async function getGSCAuthUrl(siteId: string): Promise<string> {
   }
   const data = await res.json()
   return data.authUrl
+}
+
+// --- Audit History ---
+interface AuditHistoryResponse {
+  audits: any[]
+}
+
+export function useAuditHistory(siteId?: string) {
+  const url = siteId ? `/api/audit/technical?siteId=${siteId}` : null
+  const result = useApi<AuditHistoryResponse>(url)
+  return { ...result, audits: result.data?.audits || [] }
+}
+
+// --- Technical Audit ---
+export async function runTechnicalAudit(siteId: string) {
+  const res = await fetch('/api/audit/technical', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siteId }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to run technical audit')
+  }
+  return res.json()
+}
+
+// --- AI Audit ---
+export async function runAIAudit(siteId: string) {
+  const res = await fetch('/api/ai/audit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siteId }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to run AI audit')
+  }
+  return res.json()
+}
+
+// --- User Progress ---
+interface UserProgressResponse {
+  steps: Array<{
+    stepKey: string
+    completed: boolean
+    auto: boolean
+    completedAt: string | null
+  }>
+}
+
+export function useUserProgress() {
+  const result = useApi<UserProgressResponse>('/api/user/progress')
+  return { ...result, steps: result.data?.steps || [] }
+}
+
+export async function toggleProgressStep(stepKey: string, completed: boolean) {
+  const res = await fetch('/api/user/progress', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stepKey, completed }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to update progress')
+  }
+  return res.json()
+}
+
+// --- GSC Sync ---
+export async function syncGSCKeywords(siteId: string) {
+  const res = await fetch('/api/integrations/gsc/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siteId }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to sync GSC keywords')
+  }
+  return res.json()
+}
+
+// --- LLMs.txt Generation ---
+export async function generateLlmsTxt(siteId: string) {
+  const res = await fetch('/api/ai/llms-txt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siteId }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to generate LLMs.txt')
+  }
+  return res.json()
+}
+
+// --- PDF Report ---
+export function downloadPDFReport(siteId: string) {
+  window.open(`/api/reports/pdf?siteId=${siteId}`, '_blank')
 }
 
 // --- User ---

@@ -11,10 +11,12 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Loader2,
+  ClipboardCheck,
+  Download,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { useDashboardStats } from '@/hooks/use-api'
+import { useDashboardStats, useSites } from '@/hooks/use-api'
 
 const statusBadge: Record<string, string> = {
   PUBLISHED: 'bg-green-100 text-green-700',
@@ -33,6 +35,7 @@ const statusLabel: Record<string, string> = {
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { data, loading } = useDashboardStats()
+  const { sites } = useSites()
 
   const stats = data?.stats
   const recentArticles = data?.recentArticles || []
@@ -66,49 +69,64 @@ export default function DashboardPage() {
       iconBg: 'bg-orange-100',
       iconColor: 'text-orange-600',
     },
+    {
+      name: 'Sante SEO',
+      value: stats?.seoHealthScore != null ? `${stats.seoHealthScore}/100` : '-',
+      icon: ClipboardCheck,
+      iconBg: stats?.seoHealthScore != null && stats.seoHealthScore >= 70 ? 'bg-green-100' : stats?.seoHealthScore != null && stats.seoHealthScore >= 40 ? 'bg-yellow-100' : 'bg-red-100',
+      iconColor: stats?.seoHealthScore != null && stats.seoHealthScore >= 70 ? 'text-green-600' : stats?.seoHealthScore != null && stats.seoHealthScore >= 40 ? 'text-yellow-600' : 'text-red-600',
+      href: '/dashboard/audit',
+    },
   ]
 
   return (
     <div className="space-y-6">
       {/* Welcome message */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Bonjour, {session?.user?.name || 'Utilisateur'} !
         </h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Voici un apercu de votre performance SEO.
         </p>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
-          <div
-            key={stat.name}
-            className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.iconBg}`}
-              >
-                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
-              </div>
-              <div>
-                {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
-                ) : (
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                )}
-                <p className="text-sm text-gray-500">{stat.name}</p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {statCards.map((stat) => {
+          const card = (
+            <div
+              key={stat.name}
+              className={`rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700 ${(stat as any).href ? 'hover:border-brand-300 hover:shadow-md transition-all cursor-pointer dark:hover:border-brand-500' : ''}`}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.iconBg}`}
+                >
+                  <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+                </div>
+                <div>
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                  ) : (
+                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  )}
+                  <p className="text-sm text-gray-500">{stat.name}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+          return (stat as any).href ? (
+            <Link key={stat.name} href={(stat as any).href}>{card}</Link>
+          ) : (
+            <div key={stat.name}>{card}</div>
+          )
+        })}
       </div>
 
       {/* Quick actions */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 className="text-base font-semibold text-gray-900">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:bg-gray-800 dark:border-gray-700">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
           Actions rapides
         </h3>
         <div className="mt-4 flex flex-wrap gap-3">
@@ -130,14 +148,24 @@ export default function DashboardPage() {
               Rechercher des mots-cles
             </Button>
           </Link>
+          {sites.length > 0 && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => window.open(`/api/reports/pdf?siteId=${sites[0].id}`, '_blank')}
+            >
+              <Download className="h-4 w-4" />
+              Rapport PDF
+            </Button>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Recent articles */}
-        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-5 py-4">
-            <h3 className="text-base font-semibold text-gray-900">
+        <div className="lg:col-span-2 rounded-xl border border-gray-200 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Articles recents
             </h3>
           </div>
@@ -222,9 +250,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Summary card */}
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-5 py-4">
-            <h3 className="text-base font-semibold text-gray-900">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
               Resume
             </h3>
           </div>

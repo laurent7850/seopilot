@@ -11,6 +11,12 @@
   body {
     @apply bg-white text-gray-900;
   }
+  .dark * {
+    border-color: theme('colors.gray.700');
+  }
+  .dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
 }
 
 html {

@@ -1,276 +1,454 @@
 'use client'
 
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import {
   Globe,
   FileText,
   Search,
   Link2,
-  BarChart3,
-  Calendar,
   ClipboardCheck,
   Settings,
   Sparkles,
   ArrowRight,
   CheckCircle2,
-  Lightbulb,
   Rocket,
   Target,
-  PenTool,
   TrendingUp,
   Shield,
-  RefreshCw,
+  ChevronDown,
+  Zap,
+  Loader2,
+  FileDown,
+  Bot,
 } from 'lucide-react'
 
-const steps = [
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface StepProgress {
+  stepKey: string
+  completed: boolean
+  auto: boolean
+  completedAt: string | null
+}
+
+interface StepDef {
+  key: string
+  title: string
+  description: string
+  href: string
+  icon: React.ElementType
+}
+
+interface PhaseDef {
+  id: number
+  title: string
+  subtitle: string
+  icon: React.ElementType
+  color: string
+  bgColor: string
+  borderColor: string
+  steps: StepDef[]
+}
+
+// ---------------------------------------------------------------------------
+// Phase definitions
+// ---------------------------------------------------------------------------
+
+const phases: PhaseDef[] = [
   {
-    number: 1,
-    title: 'Ajouter votre site',
-    description:
-      'Commencez par ajouter votre site web dans la section "Mes sites". Renseignez le nom, l\'URL, la niche (thematique) et la langue. Si vous utilisez WordPress, vous pouvez connecter votre site pour publier directement les articles generes.',
-    href: '/dashboard/sites',
-    icon: Globe,
-    color: 'bg-blue-500',
-    tips: [
-      'Choisissez une niche precise pour de meilleurs resultats IA',
-      'La connexion WordPress est optionnelle mais recommandee',
-      'Vous pouvez ajouter plusieurs sites selon votre plan',
+    id: 1,
+    title: 'Fondations',
+    subtitle: 'Semaines 1-2',
+    icon: Shield,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    steps: [
+      {
+        key: 'add_site',
+        title: 'Ajouter votre premier site',
+        description:
+          'Commencez par ajouter votre site web pour centraliser votre strategie SEO.',
+        href: '/dashboard/onboarding',
+        icon: Globe,
+      },
+      {
+        key: 'configure_robots',
+        title: 'Configurer robots.txt et sitemap',
+        description:
+          'Assurez-vous que les moteurs de recherche peuvent correctement explorer votre site.',
+        href: '/dashboard/audit',
+        icon: Settings,
+      },
+      {
+        key: 'run_audit',
+        title: 'Lancer un audit technique (score > 60)',
+        description:
+          'Identifiez les problemes techniques qui freinent votre referencement.',
+        href: '/dashboard/audit',
+        icon: ClipboardCheck,
+      },
+      {
+        key: 'connect_gsc',
+        title: 'Connecter Google Search Console',
+        description:
+          'Accedez a vos donnees de performances reelles depuis Google.',
+        href: '/dashboard/settings',
+        icon: TrendingUp,
+      },
     ],
   },
   {
-    number: 2,
-    title: 'Rechercher des mots-cles',
-    description:
-      'Utilisez la recherche IA de mots-cles pour decouvrir les termes les plus pertinents pour votre niche. L\'IA analyse le volume de recherche, la difficulte et l\'intention de recherche pour chaque mot-cle.',
-    href: '/dashboard/keywords',
-    icon: Search,
-    color: 'bg-purple-500',
-    tips: [
-      'Entrez la thematique de votre site pour obtenir des suggestions',
-      'Privilegiez les mots-cles a faible difficulte pour commencer',
-      'Suivez l\'evolution de vos positions au fil du temps',
-    ],
-  },
-  {
-    number: 3,
-    title: 'Generer des articles SEO',
-    description:
-      'Generez des articles optimises pour le referencement en un clic. Choisissez un site et un mot-cle, et l\'IA cree un article complet avec titre, meta-description, structure Hn et contenu optimise.',
-    href: '/dashboard/articles',
+    id: 2,
+    title: 'Contenu',
+    subtitle: 'Semaines 3-6',
     icon: FileText,
-    color: 'bg-green-500',
-    tips: [
-      'Utilisez les mots-cles decouverts a l\'etape precedente',
-      'Relisez et personnalisez l\'article avant de le publier',
-      'Le score SEO vous indique la qualite de l\'optimisation',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-50',
+    borderColor: 'border-purple-200',
+    steps: [
+      {
+        key: 'research_keywords',
+        title: 'Rechercher 20+ mots-cles',
+        description:
+          'Decouvrez les termes les plus pertinents pour votre niche.',
+        href: '/dashboard/keywords',
+        icon: Search,
+      },
+      {
+        key: 'generate_article',
+        title: 'Generer votre premier article',
+        description:
+          'Laissez l\'IA creer un article optimise SEO en quelques minutes.',
+        href: '/dashboard/articles',
+        icon: Sparkles,
+      },
+      {
+        key: 'publish_articles',
+        title: 'Publier 3 articles optimises',
+        description:
+          'Publiez vos articles pour commencer a gagner en visibilite.',
+        href: '/dashboard/articles',
+        icon: FileText,
+      },
+      {
+        key: 'improve_seo',
+        title: 'Atteindre un score SEO moyen > 75',
+        description:
+          'Optimisez vos contenus jusqu\'a obtenir un excellent score SEO.',
+        href: '/dashboard/audit',
+        icon: Target,
+      },
     ],
   },
   {
-    number: 4,
-    title: 'Planifier la publication',
-    description:
-      'Organisez votre strategie de contenu grace au calendrier editorial. Planifiez la publication de vos articles pour maintenir une frequence reguliere et maximiser votre visibilite.',
-    href: '/dashboard/calendar',
-    icon: Calendar,
-    color: 'bg-orange-500',
-    tips: [
-      'Publiez regulierement pour maintenir l\'indexation',
-      'Variez les mots-cles cibles entre les articles',
-      'Planifiez vos contenus a l\'avance pour gagner du temps',
-    ],
-  },
-  {
-    number: 5,
-    title: 'Analyser les backlinks',
-    description:
-      'Decouvrez des opportunites de backlinks pour renforcer l\'autorite de votre site. L\'IA identifie les sites pertinents dans votre niche et vous aide a construire un profil de liens solide.',
-    href: '/dashboard/backlinks',
-    icon: Link2,
-    color: 'bg-pink-500',
-    tips: [
-      'Verifiez regulierement que vos backlinks sont toujours actifs',
-      'Privilegiez la qualite a la quantite',
-      'Consultez les suggestions IA pour de nouvelles opportunites',
-    ],
-  },
-  {
-    number: 6,
-    title: 'Auditer votre SEO',
-    description:
-      'Lancez un audit SEO complet de votre site pour identifier les points d\'amelioration. L\'audit analyse la structure, le contenu, les performances techniques et fournit des recommandations concretes.',
-    href: '/dashboard/audit',
-    icon: ClipboardCheck,
-    color: 'bg-red-500',
-    tips: [
-      'Lancez un audit apres chaque serie de modifications',
-      'Corrigez d\'abord les erreurs critiques',
-      'Un score au-dessus de 80 est un bon objectif',
-    ],
-  },
-  {
-    number: 7,
-    title: 'Suivre vos performances',
-    description:
-      'Consultez vos analytics pour mesurer l\'impact de votre strategie SEO. Suivez l\'evolution du trafic, des positions et des conversions pour ajuster votre approche.',
-    href: '/dashboard/analytics',
-    icon: BarChart3,
-    color: 'bg-indigo-500',
-    tips: [
-      'Connectez Google Search Console pour des donnees precises',
-      'Comparez les periodes pour mesurer vos progres',
-      'Identifiez vos pages les plus performantes',
+    id: 3,
+    title: 'Croissance',
+    subtitle: 'Semaines 7-12',
+    icon: Rocket,
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    borderColor: 'border-green-200',
+    steps: [
+      {
+        key: 'analyze_backlinks',
+        title: 'Analyser les backlinks concurrents',
+        description:
+          'Identifiez les opportunites de liens grace a l\'analyse concurrentielle.',
+        href: '/dashboard/backlinks',
+        icon: Link2,
+      },
+      {
+        key: 'get_backlinks',
+        title: 'Obtenir 5 backlinks actifs',
+        description:
+          'Construisez un profil de liens solide pour renforcer votre autorite.',
+        href: '/dashboard/backlinks',
+        icon: Link2,
+      },
+      {
+        key: 'top10_keywords',
+        title: 'Atteindre le top 10 pour 3 mots-cles',
+        description:
+          'Suivez vos positions et celebrez vos premiers classements.',
+        href: '/dashboard/keywords',
+        icon: TrendingUp,
+      },
+      {
+        key: 'export_pdf',
+        title: 'Generer votre rapport PDF',
+        description:
+          'Exportez un rapport complet pour mesurer vos progres.',
+        href: '/dashboard/audit',
+        icon: FileDown,
+      },
     ],
   },
 ]
 
-const features = [
-  {
-    icon: Sparkles,
-    title: 'Generation IA',
-    description: 'Articles optimises SEO generes par intelligence artificielle avec structure Hn, meta-donnees et maillage interne.',
-  },
-  {
-    icon: Target,
-    title: 'Recherche de mots-cles',
-    description: 'Decouverte automatique de mots-cles pertinents avec estimation du volume, de la difficulte et de l\'intention.',
-  },
-  {
-    icon: PenTool,
-    title: 'Editeur de contenu',
-    description: 'Editeur complet pour personnaliser vos articles avant publication avec apercu en temps reel.',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Suivi de positions',
-    description: 'Suivez l\'evolution du classement de vos mots-cles dans les resultats de recherche Google.',
-  },
-  {
-    icon: Shield,
-    title: 'Audit SEO',
-    description: 'Analyse technique et editoriale de votre site avec des recommandations actionnables.',
-  },
-  {
-    icon: RefreshCw,
-    title: 'Publication automatique',
-    description: 'Publiez directement sur WordPress depuis SEOPilot, manuellement ou de facon planifiee.',
-  },
-]
+const TOTAL_STEPS = phases.reduce((acc, p) => acc + p.steps.length, 0)
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export default function GuidePage() {
+  const [progress, setProgress] = useState<StepProgress[]>([])
+  const [loading, setLoading] = useState(true)
+  const [openPhases, setOpenPhases] = useState<Record<number, boolean>>({
+    1: true,
+    2: true,
+    3: true,
+  })
+  const [togglingStep, setTogglingStep] = useState<string | null>(null)
+
+  const fetchProgress = useCallback(async () => {
+    try {
+      const res = await fetch('/api/user/progress')
+      if (res.ok) {
+        const data = await res.json()
+        setProgress(data.steps)
+      }
+    } catch (err) {
+      console.error('Failed to fetch progress:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchProgress()
+  }, [fetchProgress])
+
+  const getStepProgress = (key: string): StepProgress | undefined =>
+    progress.find((p) => p.stepKey === key)
+
+  const completedCount = progress.filter((p) => p.completed).length
+  const percentage = TOTAL_STEPS > 0 ? Math.round((completedCount / TOTAL_STEPS) * 100) : 0
+
+  const togglePhase = (phaseId: number) => {
+    setOpenPhases((prev) => ({ ...prev, [phaseId]: !prev[phaseId] }))
+  }
+
+  const toggleManualStep = async (stepKey: string, currentCompleted: boolean) => {
+    setTogglingStep(stepKey)
+    try {
+      const res = await fetch('/api/user/progress', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stepKey, completed: !currentCompleted }),
+      })
+      if (res.ok) {
+        // Refresh progress to get the latest state
+        await fetchProgress()
+      }
+    } catch (err) {
+      console.error('Failed to toggle step:', err)
+    } finally {
+      setTogglingStep(null)
+    }
+  }
+
+  const phaseCompletedCount = (phase: PhaseDef) =>
+    phase.steps.filter((s) => getStepProgress(s.key)?.completed).length
+
   return (
-    <div className="mx-auto max-w-4xl space-y-10">
+    <div className="mx-auto max-w-4xl space-y-8">
       {/* Header */}
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-100">
           <Rocket className="h-8 w-8 text-brand-600" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">
-          Guide d&apos;utilisation
+          Votre feuille de route SEO
         </h2>
         <p className="mt-3 text-lg text-gray-500">
-          Apprenez a utiliser SEOPilot pour automatiser votre strategie SEO en quelques etapes simples.
+          Suivez ces etapes pour construire une strategie SEO solide et durable.
         </p>
       </div>
 
-      {/* Quick start */}
-      <div className="rounded-2xl border border-brand-200 bg-gradient-to-br from-brand-50 to-white p-6">
-        <div className="flex items-start gap-3">
-          <Lightbulb className="mt-0.5 h-6 w-6 flex-shrink-0 text-brand-600" />
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Demarrage rapide</h3>
-            <p className="mt-1 text-sm text-gray-600">
-              Pour commencer a generer du trafic organique, suivez ces 3 etapes essentielles :
-            </p>
-            <ol className="mt-3 space-y-2">
-              <li className="flex items-center gap-2 text-sm text-gray-700">
-                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">1</span>
-                Ajoutez votre site dans <Link href="/dashboard/sites" className="font-medium text-brand-600 hover:underline">Mes sites</Link>
-              </li>
-              <li className="flex items-center gap-2 text-sm text-gray-700">
-                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">2</span>
-                Recherchez des mots-cles dans <Link href="/dashboard/keywords" className="font-medium text-brand-600 hover:underline">Mots-cles</Link>
-              </li>
-              <li className="flex items-center gap-2 text-sm text-gray-700">
-                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">3</span>
-                Generez votre premier article dans <Link href="/dashboard/articles" className="font-medium text-brand-600 hover:underline">Articles</Link>
-              </li>
-            </ol>
-          </div>
-        </div>
-      </div>
-
-      {/* Step by step */}
-      <div>
-        <h3 className="mb-6 text-xl font-bold text-gray-900">Etapes detaillees</h3>
-        <div className="space-y-6">
-          {steps.map((step) => (
-            <div
-              key={step.number}
-              className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
-            >
-              <div className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${step.color} text-white`}>
-                    <step.icon className="h-6 w-6" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                        Etape {step.number}
-                      </span>
-                    </div>
-                    <h4 className="mt-1 text-lg font-semibold text-gray-900">
-                      {step.title}
-                    </h4>
-                    <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                      {step.description}
-                    </p>
-
-                    {/* Tips */}
-                    <div className="mt-4 space-y-1.5">
-                      {step.tips.map((tip, i) => (
-                        <div key={i} className="flex items-start gap-2">
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" />
-                          <span className="text-sm text-gray-600">{tip}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Link
-                      href={step.href}
-                      className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:text-brand-700"
-                    >
-                      Acceder a cette section
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
+      {/* Global progress bar */}
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50">
+              <Zap className="h-5 w-5 text-brand-600" />
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Features grid */}
-      <div>
-        <h3 className="mb-6 text-xl font-bold text-gray-900">Fonctionnalites principales</h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-            >
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50">
-                <feature.icon className="h-5 w-5 text-brand-600" />
-              </div>
-              <h4 className="text-sm font-semibold text-gray-900">{feature.title}</h4>
-              <p className="mt-1 text-sm leading-relaxed text-gray-500">
-                {feature.description}
+            <div>
+              <p className="text-sm font-semibold text-gray-900">
+                Progression globale
+              </p>
+              <p className="text-sm text-gray-500">
+                {loading ? (
+                  'Chargement...'
+                ) : (
+                  <>
+                    {completedCount}/{TOTAL_STEPS} etapes completees
+                  </>
+                )}
               </p>
             </div>
-          ))}
+          </div>
+          <span className="text-2xl font-bold text-brand-600">
+            {loading ? '--' : `${percentage}%`}
+          </span>
+        </div>
+        <div className="mt-4 h-3 overflow-hidden rounded-full bg-gray-100">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-700 ease-out"
+            style={{ width: loading ? '0%' : `${percentage}%` }}
+          />
         </div>
       </div>
+
+      {/* Phases */}
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {phases.map((phase) => {
+            const pCompleted = phaseCompletedCount(phase)
+            const pTotal = phase.steps.length
+            const isOpen = openPhases[phase.id]
+
+            return (
+              <div
+                key={phase.id}
+                className={`overflow-hidden rounded-xl border ${phase.borderColor} bg-white shadow-sm`}
+              >
+                {/* Phase header */}
+                <button
+                  type="button"
+                  onClick={() => togglePhase(phase.id)}
+                  className="flex w-full items-center justify-between px-6 py-5 text-left transition-colors hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-xl ${phase.bgColor}`}
+                    >
+                      <phase.icon className={`h-6 w-6 ${phase.color}`} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Phase {phase.id} &mdash; {phase.title}
+                        </h3>
+                        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
+                          {phase.subtitle}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-sm text-gray-500">
+                        {pCompleted}/{pTotal} etapes completees
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronDown
+                    className={`h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Phase steps */}
+                {isOpen && (
+                  <div className="border-t border-gray-100 divide-y divide-gray-100">
+                    {phase.steps.map((step) => {
+                      const sp = getStepProgress(step.key)
+                      const completed = sp?.completed || false
+                      const isAuto = sp?.auto || false
+                      const isToggling = togglingStep === step.key
+
+                      return (
+                        <div
+                          key={step.key}
+                          className={`flex items-start gap-4 px-6 py-4 transition-colors ${
+                            completed ? 'bg-gray-50/50' : ''
+                          }`}
+                        >
+                          {/* Checkbox area */}
+                          <div className="mt-0.5 flex-shrink-0">
+                            {isAuto ? (
+                              <div
+                                className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                                  completed
+                                    ? 'bg-green-500 text-white'
+                                    : 'border-2 border-gray-300 bg-white'
+                                }`}
+                              >
+                                {completed && (
+                                  <CheckCircle2 className="h-4 w-4" />
+                                )}
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={isToggling}
+                                onClick={() => toggleManualStep(step.key, completed)}
+                                className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
+                                  completed
+                                    ? 'bg-green-500 text-white hover:bg-green-600'
+                                    : 'border-2 border-gray-300 bg-white hover:border-brand-400'
+                                } ${isToggling ? 'opacity-50' : ''}`}
+                              >
+                                {isToggling ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : completed ? (
+                                  <CheckCircle2 className="h-4 w-4" />
+                                ) : null}
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`text-sm font-medium ${
+                                  completed ? 'text-gray-400 line-through' : 'text-gray-900'
+                                }`}
+                              >
+                                {step.title}
+                              </span>
+                              {isAuto && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
+                                  <Bot className="h-3 w-3" />
+                                  auto
+                                </span>
+                              )}
+                            </div>
+                            <p
+                              className={`mt-0.5 text-sm ${
+                                completed ? 'text-gray-400' : 'text-gray-500'
+                              }`}
+                            >
+                              {step.description}
+                            </p>
+                          </div>
+
+                          {/* Action button */}
+                          <Link
+                            href={step.href}
+                            className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 hover:text-brand-600"
+                          >
+                            <step.icon className="h-3.5 w-3.5" />
+                            Acceder
+                            <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* FAQ */}
       <div>
@@ -326,7 +504,7 @@ export default function GuidePage() {
         </p>
         <div className="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/dashboard/sites"
+            href="/dashboard/onboarding"
             className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-brand-600 shadow-sm hover:bg-brand-50"
           >
             <Globe className="h-4 w-4" />
@@ -340,18 +518,6 @@ export default function GuidePage() {
             Generer un article
           </Link>
         </div>
-      </div>
-
-      {/* Settings reminder */}
-      <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <Settings className="h-5 w-5 flex-shrink-0 text-gray-400" />
-        <p className="text-sm text-gray-600">
-          N&apos;oubliez pas de configurer vos{' '}
-          <Link href="/dashboard/settings" className="font-medium text-brand-600 hover:underline">
-            parametres
-          </Link>{' '}
-          (notifications, preferences de generation, connexion Google Search Console) pour tirer le meilleur parti de SEOPilot.
-        </p>
       </div>
     </div>
   )
