@@ -19,10 +19,10 @@ import Link from 'next/link'
 import { useDashboardStats, useSites } from '@/hooks/use-api'
 
 const statusBadge: Record<string, string> = {
-  PUBLISHED: 'bg-green-100 text-green-700',
-  SCHEDULED: 'bg-yellow-100 text-yellow-700',
-  DRAFT: 'bg-gray-100 text-gray-700',
-  FAILED: 'bg-red-100 text-red-700',
+  PUBLISHED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  SCHEDULED: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  DRAFT: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+  FAILED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
 
 const statusLabel: Record<string, string> = {
@@ -109,9 +109,9 @@ export default function DashboardPage() {
                   {loading ? (
                     <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
                   ) : (
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                   )}
-                  <p className="text-sm text-gray-500">{stat.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{stat.name}</p>
                 </div>
               </div>
             </div>
@@ -172,22 +172,22 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100 text-left">
-                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">
+                <tr className="border-b border-gray-100 text-left dark:border-gray-700">
+                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Titre
                   </th>
-                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Statut
                   </th>
-                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Score SEO
                   </th>
-                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">
+                  <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Date
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {loading ? (
                   <tr>
                     <td colSpan={4} className="px-5 py-12 text-center">
@@ -196,14 +196,14 @@ export default function DashboardPage() {
                   </tr>
                 ) : recentArticles.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-5 py-12 text-center text-sm text-gray-500">
+                    <td colSpan={4} className="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                       Aucun article pour le moment. Generez votre premier article !
                     </td>
                   </tr>
                 ) : (
                   recentArticles.map((article: any) => (
-                    <tr key={article.id} className="hover:bg-gray-50">
-                      <td className="px-5 py-3 text-sm font-medium text-gray-900">
+                    <tr key={article.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-5 py-3 text-sm font-medium text-gray-900 dark:text-white">
                         {article.title}
                       </td>
                       <td className="px-5 py-3">
@@ -218,7 +218,7 @@ export default function DashboardPage() {
                       <td className="px-5 py-3">
                         {article.seoScore ? (
                           <div className="flex items-center gap-2">
-                            <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-100">
+                            <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
                               <div
                                 className={`h-full rounded-full ${
                                   article.seoScore >= 80
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                                 style={{ width: `${article.seoScore}%` }}
                               />
                             </div>
-                            <span className="text-xs text-gray-600">
+                            <span className="text-xs text-gray-600 dark:text-gray-400">
                               {article.seoScore}
                             </span>
                           </div>
@@ -238,7 +238,7 @@ export default function DashboardPage() {
                           <span className="text-xs text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-sm text-gray-500">
+                      <td className="px-5 py-3 text-sm text-gray-500 dark:text-gray-400">
                         {new Date(article.createdAt).toLocaleDateString('fr-FR')}
                       </td>
                     </tr>
@@ -258,32 +258,32 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-4 p-5">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Sites</span>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm text-gray-500 dark:text-gray-400">Sites</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {loading ? '-' : stats?.sites || 0}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Total articles</span>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm text-gray-500 dark:text-gray-400">Total articles</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {loading ? '-' : stats?.articles || 0}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Brouillons</span>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm text-gray-500 dark:text-gray-400">Brouillons</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {loading ? '-' : stats?.drafts || 0}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Total backlinks</span>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm text-gray-500 dark:text-gray-400">Total backlinks</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {loading ? '-' : stats?.backlinks || 0}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">Position moyenne</span>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm text-gray-500 dark:text-gray-400">Position moyenne</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {loading ? '-' : stats?.avgPosition ? stats.avgPosition.toFixed(1) : '-'}
               </span>
             </div>

@@ -38,8 +38,8 @@ export default function SitesPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Mes sites web</h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Mes sites web</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Gerez vos sites et leur configuration SEO.
           </p>
         </div>
@@ -56,7 +56,7 @@ export default function SitesPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-center text-sm text-red-600 dark:text-red-400">
           {error}
         </div>
       ) : sites.length > 0 ? (
@@ -65,7 +65,7 @@ export default function SitesPage() {
             <Link
               key={site.id}
               href={`/dashboard/sites/${site.id}`}
-              className="block rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+              className="block rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
@@ -73,12 +73,12 @@ export default function SitesPage() {
                     <Globe className="h-5 w-5 text-brand-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{site.name}</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{site.name}</h3>
                     <a
                       href={site.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-gray-500 hover:text-brand-600"
+                      className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-brand-600"
                     >
                       {site.url.replace('https://', '').replace('http://', '')}
                       <ExternalLink className="h-3 w-3" />
@@ -88,7 +88,7 @@ export default function SitesPage() {
                 <button
                   onClick={() => handleDelete(site.id, site.name)}
                   disabled={deleting === site.id}
-                  className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                  className="rounded-lg p-1 text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500"
                 >
                   {deleting === site.id ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -100,11 +100,11 @@ export default function SitesPage() {
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {site.niche && (
-                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                  <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
                     {site.niche}
                   </span>
                 )}
-                <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                <span className="inline-flex items-center rounded-full bg-gray-100 dark:bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300">
                   {site.language === 'fr' ? 'Francais' : site.language === 'en' ? 'English' : site.language}
                 </span>
                 <span
@@ -116,19 +116,19 @@ export default function SitesPage() {
                 </span>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-gray-100 dark:border-gray-700 pt-4">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-gray-400" />
                   <div>
-                    <p className="text-lg font-semibold text-gray-900">{site._count?.articles || 0}</p>
-                    <p className="text-xs text-gray-500">Articles</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{site._count?.articles || 0}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Articles</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Search className="h-4 w-4 text-gray-400" />
                   <div>
-                    <p className="text-lg font-semibold text-gray-900">{site._count?.keywords || 0}</p>
-                    <p className="text-xs text-gray-500">Mots-cles</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{site._count?.keywords || 0}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Mots-cles</p>
                   </div>
                 </div>
               </div>
@@ -136,12 +136,12 @@ export default function SitesPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white py-16">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+        <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-16">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
             <Globe className="h-8 w-8 text-gray-400" />
           </div>
-          <h3 className="mt-4 text-lg font-semibold text-gray-900">Aucun site ajoute</h3>
-          <p className="mt-2 max-w-sm text-center text-sm text-gray-500">
+          <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Aucun site ajoute</h3>
+          <p className="mt-2 max-w-sm text-center text-sm text-gray-500 dark:text-gray-400">
             Commencez par ajouter votre premier site web pour profiter de toutes les fonctionnalites SEO automatisees.
           </p>
           <Link href="/dashboard/onboarding" className="mt-6">

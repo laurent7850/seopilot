@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import {
   Search,
   TrendingUp,
@@ -22,7 +21,6 @@ import { useToast } from '@/components/ui/toast'
 import { useKeywords, useSites, deleteKeyword, researchKeywords } from '@/hooks/use-api'
 
 export default function KeywordsPage() {
-  const router = useRouter()
   const toast = useToast()
   const [searchQuery, setSearchQuery] = useState('')
   const [showResearch, setShowResearch] = useState(false)
@@ -140,14 +138,14 @@ export default function KeywordsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Suivi des mots-cles</h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Suivi des mots-cles</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Suivez le positionnement de vos mots-cles sur Google.
           </p>
         </div>
         <div className="flex items-center gap-3">
           {lastSyncedAt && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 dark:text-gray-500">
               Derniere sync : {getTimeSinceSync(lastSyncedAt)}
             </span>
           )}
@@ -172,13 +170,13 @@ export default function KeywordsPage() {
       </div>
 
       {showResearch && (
-        <div className="rounded-xl border border-brand-200 bg-brand-50 p-5">
-          <h3 className="text-sm font-semibold text-gray-900">Recherche IA de mots-cles</h3>
+        <div className="rounded-xl border border-brand-200 bg-brand-50 p-5 dark:border-brand-800 dark:bg-brand-950/30">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Recherche IA de mots-cles</h3>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row">
             <select
               value={researchSiteId}
               onChange={(e) => setResearchSiteId(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">Choisir un site</option>
               {sites.map((s: any) => (
@@ -190,7 +188,7 @@ export default function KeywordsPage() {
               value={researchNiche}
               onChange={(e) => setResearchNiche(e.target.value)}
               placeholder="Niche / thematique..."
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
             />
             <Button onClick={handleResearch} disabled={researching || !researchSiteId || !researchNiche}>
               {researching ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Rechercher'}
@@ -203,14 +201,14 @@ export default function KeywordsPage() {
         {statsData.map((stat) => (
           <div
             key={stat.label}
-            className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+            className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
           >
             <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.bg}`}>
               <stat.icon className={`h-5 w-5 ${stat.color}`} />
             </div>
             <div>
-              <p className="text-xl font-bold text-gray-900">{stat.value}</p>
-              <p className="text-xs text-gray-500">{stat.label}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
             </div>
           </div>
         ))}
@@ -223,27 +221,27 @@ export default function KeywordsPage() {
           placeholder="Filtrer les mots-cles..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-700 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400"
         />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 text-left">
-                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Mot-cle</th>
-                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Volume</th>
-                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Difficulte</th>
-                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Position</th>
-                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Clics</th>
-                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Impressions</th>
-                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">CTR</th>
-                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Tendance</th>
-                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500"></th>
+              <tr className="border-b border-gray-200 bg-gray-50 text-left dark:border-gray-700 dark:bg-gray-700">
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Mot-cle</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Volume</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Difficulte</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Position</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Clics</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Impressions</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">CTR</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Tendance</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {loading ? (
                 <tr>
                   <td colSpan={9} className="px-5 py-12 text-center">
@@ -252,7 +250,7 @@ export default function KeywordsPage() {
                 </tr>
               ) : filteredKeywords.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-5 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={9} className="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                     Aucun mot-cle trouve.
                   </td>
                 </tr>
@@ -263,20 +261,20 @@ export default function KeywordsPage() {
                     : 0
                   const trend = positionChange > 0 ? 'up' : positionChange < 0 ? 'down' : 'stable'
                   return (
-                    <tr key={kw.id} className="cursor-pointer hover:bg-gray-50" onClick={() => router.push(`/dashboard/keywords/${kw.id}`)}>
+                    <tr key={kw.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-gray-900">{kw.term}</span>
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">{kw.term}</span>
                           <BarChart3 className="h-3 w-3 text-gray-400" />
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-sm text-gray-600">
+                      <td className="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {kw.volume ? kw.volume.toLocaleString('fr-FR') : '-'}
                       </td>
                       <td className="px-5 py-4">
                         {kw.difficulty ? (
                           <div className="flex items-center gap-2">
-                            <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-100">
+                            <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-600">
                               <div
                                 className={`h-full rounded-full ${
                                   kw.difficulty >= 70 ? 'bg-red-500' : kw.difficulty >= 40 ? 'bg-yellow-500' : 'bg-green-500'
@@ -284,7 +282,7 @@ export default function KeywordsPage() {
                                 style={{ width: `${kw.difficulty}%` }}
                               />
                             </div>
-                            <span className="text-xs font-medium text-gray-600">{kw.difficulty}</span>
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{kw.difficulty}</span>
                           </div>
                         ) : (
                           <span className="text-xs text-gray-400">-</span>
@@ -295,7 +293,7 @@ export default function KeywordsPage() {
                           <div className="flex items-center gap-2">
                             <span
                               className={`text-sm font-bold ${
-                                kw.position <= 10 ? 'text-green-600' : kw.position <= 30 ? 'text-yellow-600' : 'text-gray-600'
+                                kw.position <= 10 ? 'text-green-600' : kw.position <= 30 ? 'text-yellow-600' : 'text-gray-600 dark:text-gray-300'
                               }`}
                             >
                               {kw.position}
@@ -316,13 +314,13 @@ export default function KeywordsPage() {
                           <span className="text-xs text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="px-5 py-4 text-sm text-gray-600">
+                      <td className="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {kw.clicks ? kw.clicks.toLocaleString('fr-FR') : '-'}
                       </td>
-                      <td className="px-5 py-4 text-sm text-gray-600">
+                      <td className="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {kw.impressions ? kw.impressions.toLocaleString('fr-FR') : '-'}
                       </td>
-                      <td className="px-5 py-4 text-sm text-gray-600">
+                      <td className="px-5 py-4 text-sm text-gray-600 dark:text-gray-300">
                         {kw.ctr ? `${(kw.ctr * 100).toFixed(1)}%` : '-'}
                       </td>
                       <td className="px-5 py-4">
@@ -340,7 +338,7 @@ export default function KeywordsPage() {
                         <button
                           onClick={() => handleDelete(kw.id)}
                           disabled={deletingId === kw.id}
-                          className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                          className="rounded-lg p-1 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
                         >
                           {deletingId === kw.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -356,8 +354,8 @@ export default function KeywordsPage() {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-5 py-3">
-          <p className="text-sm text-gray-500">
+        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-5 py-3 dark:border-gray-700 dark:bg-gray-800">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {filteredKeywords.length} mot{filteredKeywords.length > 1 ? 's' : ''}-cle{filteredKeywords.length > 1 ? 's' : ''}
           </p>
         </div>

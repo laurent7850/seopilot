@@ -96,8 +96,8 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Analytics SEO</h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Analytics SEO</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Analysez vos performances SEO en detail.
           </p>
         </div>
@@ -107,7 +107,7 @@ export default function AnalyticsPage() {
             <select
               value={selectedSiteId || ''}
               onChange={(e) => setSelectedSiteId(e.target.value || undefined)}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">Tous les sites</option>
               {sites.map((s: any) => (
@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
               ))}
             </select>
           )}
-          <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
+          <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
             {dateRanges.map((range) => (
               <button
                 key={range.value}
@@ -124,7 +124,7 @@ export default function AnalyticsPage() {
                   'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
                   selectedDays === range.value
                     ? 'bg-brand-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
                 )}
               >
                 {range.label}
@@ -139,7 +139,7 @@ export default function AnalyticsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600 dark:border-red-800 dark:bg-red-900/30 dark:text-red-400">
           {error}
         </div>
       ) : (
@@ -149,15 +149,15 @@ export default function AnalyticsPage() {
             {metrics.map((metric) => (
               <div
                 key={metric.name}
-                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800"
               >
                 <div className="flex items-center gap-3">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${metric.bg}`}>
                     <metric.icon className={`h-5 w-5 ${metric.color}`} />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
-                    <p className="text-xs text-gray-500">{metric.name}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{metric.value}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{metric.name}</p>
                   </div>
                 </div>
                 {metric.change && (
@@ -169,7 +169,7 @@ export default function AnalyticsPage() {
                     >
                       {metric.change}
                     </span>
-                    <span className="text-xs text-gray-400">vs periode precedente</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">vs periode precedente</span>
                   </div>
                 )}
               </div>
@@ -179,9 +179,9 @@ export default function AnalyticsPage() {
           {/* Charts row */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Traffic area chart */}
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 px-5 py-4">
-                <h3 className="text-base font-semibold text-gray-900">Trafic organique</h3>
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Trafic organique</h3>
               </div>
               <div className="p-5">
                 {chartData.length > 0 ? (
@@ -215,7 +215,7 @@ export default function AnalyticsPage() {
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex h-[280px] flex-col items-center justify-center rounded-lg bg-gradient-to-br from-green-50 to-emerald-100 text-green-600">
+                  <div className="flex h-[280px] flex-col items-center justify-center rounded-lg bg-gradient-to-br from-green-50 to-emerald-100 text-green-600 dark:from-green-900/30 dark:to-emerald-900/30 dark:text-green-400">
                     <Activity className="mb-2 h-10 w-10 opacity-50" />
                     <p className="text-sm font-medium">Pas encore de donnees</p>
                     <p className="mt-1 text-xs opacity-60">Les donnees apparaitront ici.</p>
@@ -225,9 +225,9 @@ export default function AnalyticsPage() {
             </div>
 
             {/* Keywords + Backlinks bar chart */}
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 px-5 py-4">
-                <h3 className="text-base font-semibold text-gray-900">Mots-cles & Backlinks</h3>
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Mots-cles & Backlinks</h3>
               </div>
               <div className="p-5">
                 {chartData.length > 0 ? (
@@ -249,7 +249,7 @@ export default function AnalyticsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex h-[280px] flex-col items-center justify-center rounded-lg bg-gradient-to-br from-purple-50 to-violet-100 text-purple-600">
+                  <div className="flex h-[280px] flex-col items-center justify-center rounded-lg bg-gradient-to-br from-purple-50 to-violet-100 text-purple-600 dark:from-purple-900/30 dark:to-violet-900/30 dark:text-purple-400">
                     <PieChartIcon className="mb-2 h-10 w-10 opacity-50" />
                     <p className="text-sm font-medium">Pas encore de donnees</p>
                     <p className="mt-1 text-xs opacity-60">Les donnees apparaitront ici.</p>
@@ -261,10 +261,10 @@ export default function AnalyticsPage() {
 
           {/* Position line chart */}
           {chartData.some((d: any) => d.position !== null) && (
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 px-5 py-4">
-                <h3 className="text-base font-semibold text-gray-900">Position moyenne dans le temps</h3>
-                <p className="mt-0.5 text-xs text-gray-500">Plus la valeur est basse, meilleur est le classement</p>
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Position moyenne dans le temps</h3>
+                <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Plus la valeur est basse, meilleur est le classement</p>
               </div>
               <div className="p-5">
                 <ResponsiveContainer width="100%" height={250}>
@@ -296,33 +296,33 @@ export default function AnalyticsPage() {
 
           {/* Snapshot table */}
           {snapshots.length > 0 && (
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-200 px-5 py-4">
-                <h3 className="text-base font-semibold text-gray-900">Historique des snapshots</h3>
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+              <div className="border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Historique des snapshots</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-100 text-left">
-                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
-                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Trafic</th>
-                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Mots-cles</th>
-                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Backlinks</th>
-                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500">Position moy.</th>
+                    <tr className="border-b border-gray-100 text-left dark:border-gray-700">
+                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
+                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Trafic</th>
+                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Mots-cles</th>
+                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Backlinks</th>
+                      <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Position moy.</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                     {snapshots.slice().reverse().slice(0, 15).map((snap: any, idx: number) => (
-                      <tr key={idx} className="hover:bg-gray-50">
-                        <td className="px-5 py-3 text-sm text-gray-600">
+                      <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-5 py-3 text-sm text-gray-600 dark:text-gray-300">
                           {new Date(snap.date).toLocaleDateString('fr-FR')}
                         </td>
-                        <td className="px-5 py-3 text-sm font-medium text-gray-900">
+                        <td className="px-5 py-3 text-sm font-medium text-gray-900 dark:text-white">
                           {snap.organicTraffic.toLocaleString('fr-FR')}
                         </td>
-                        <td className="px-5 py-3 text-sm text-gray-600">{snap.totalKeywords || '-'}</td>
-                        <td className="px-5 py-3 text-sm text-gray-600">{snap.backlinksCount || '-'}</td>
-                        <td className="px-5 py-3 text-sm text-gray-600">
+                        <td className="px-5 py-3 text-sm text-gray-600 dark:text-gray-300">{snap.totalKeywords || '-'}</td>
+                        <td className="px-5 py-3 text-sm text-gray-600 dark:text-gray-300">{snap.backlinksCount || '-'}</td>
+                        <td className="px-5 py-3 text-sm text-gray-600 dark:text-gray-300">
                           {snap.avgPosition ? snap.avgPosition.toFixed(1) : '-'}
                         </td>
                       </tr>

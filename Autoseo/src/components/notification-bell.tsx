@@ -30,10 +30,10 @@ const typeIcons: Record<string, any> = {
 }
 
 const typeColors: Record<string, string> = {
-  article_generated: 'text-blue-500 bg-blue-50',
-  backlink_lost: 'text-red-500 bg-red-50',
-  backlink_found: 'text-green-500 bg-green-50',
-  weekly_report: 'text-purple-500 bg-purple-50',
+  article_generated: 'text-blue-500 bg-blue-50 dark:bg-blue-900/30',
+  backlink_lost: 'text-red-500 bg-red-50 dark:bg-red-900/30',
+  backlink_found: 'text-green-500 bg-green-50 dark:bg-green-900/30',
+  weekly_report: 'text-purple-500 bg-purple-50 dark:bg-purple-900/30',
 }
 
 export default function NotificationBell() {
@@ -100,7 +100,7 @@ export default function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={handleOpen}
-        className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+        className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -111,9 +111,9 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-gray-200 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-            <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+        <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3 dark:border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
@@ -129,8 +129,8 @@ export default function NotificationBell() {
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center">
-                <Bell className="mx-auto h-8 w-8 text-gray-300" />
-                <p className="mt-2 text-sm text-gray-500">Aucune notification</p>
+                <Bell className="mx-auto h-8 w-8 text-gray-300 dark:text-gray-600" />
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Aucune notification</p>
               </div>
             ) : (
               notifications.map((notif) => {
@@ -139,17 +139,17 @@ export default function NotificationBell() {
                 const content = (
                   <div
                     key={notif.id}
-                    className={`flex gap-3 px-4 py-3 transition-colors hover:bg-gray-50 ${!notif.read ? 'bg-brand-50/30' : ''}`}
+                    className={`flex gap-3 px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${!notif.read ? 'bg-brand-50/30 dark:bg-brand-900/10' : ''}`}
                   >
                     <div className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${colorClass}`}>
                       <Icon className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${!notif.read ? 'font-medium text-gray-900' : 'text-gray-700'}`}>
+                      <p className={`text-sm ${!notif.read ? 'font-medium text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
                         {notif.title}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-gray-500">{notif.message}</p>
-                      <p className="mt-1 text-xs text-gray-400">{timeAgo(notif.createdAt)}</p>
+                      <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-gray-400">{notif.message}</p>
+                      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{timeAgo(notif.createdAt)}</p>
                     </div>
                     {!notif.read && (
                       <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-brand-500" />

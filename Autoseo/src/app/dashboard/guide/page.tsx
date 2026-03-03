@@ -262,26 +262,26 @@ export default function GuidePage() {
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-100">
           <Rocket className="h-8 w-8 text-brand-600" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
           Votre feuille de route SEO
         </h2>
-        <p className="mt-3 text-lg text-gray-500">
+        <p className="mt-3 text-lg text-gray-500 dark:text-gray-400">
           Suivez ces etapes pour construire une strategie SEO solide et durable.
         </p>
       </div>
 
       {/* Global progress bar */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-50">
               <Zap className="h-5 w-5 text-brand-600" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
                 Progression globale
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {loading ? (
                   'Chargement...'
                 ) : (
@@ -296,7 +296,7 @@ export default function GuidePage() {
             {loading ? '--' : `${percentage}%`}
           </span>
         </div>
-        <div className="mt-4 h-3 overflow-hidden rounded-full bg-gray-100">
+        <div className="mt-4 h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
           <div
             className="h-full rounded-full bg-gradient-to-r from-brand-500 to-brand-600 transition-all duration-700 ease-out"
             style={{ width: loading ? '0%' : `${percentage}%` }}
@@ -319,13 +319,13 @@ export default function GuidePage() {
             return (
               <div
                 key={phase.id}
-                className={`overflow-hidden rounded-xl border ${phase.borderColor} bg-white shadow-sm`}
+                className={`overflow-hidden rounded-xl border ${phase.borderColor} bg-white dark:bg-gray-800 shadow-sm`}
               >
                 {/* Phase header */}
                 <button
                   type="button"
                   onClick={() => togglePhase(phase.id)}
-                  className="flex w-full items-center justify-between px-6 py-5 text-left transition-colors hover:bg-gray-50"
+                  className="flex w-full items-center justify-between px-6 py-5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   <div className="flex items-center gap-4">
                     <div
@@ -335,20 +335,20 @@ export default function GuidePage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                           Phase {phase.id} &mdash; {phase.title}
                         </h3>
-                        <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
+                        <span className="rounded-full bg-gray-100 dark:bg-gray-700 px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400">
                           {phase.subtitle}
                         </span>
                       </div>
-                      <p className="mt-0.5 text-sm text-gray-500">
+                      <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
                         {pCompleted}/{pTotal} etapes completees
                       </p>
                     </div>
                   </div>
                   <ChevronDown
-                    className={`h-5 w-5 flex-shrink-0 text-gray-400 transition-transform duration-200 ${
+                    className={`h-5 w-5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
                       isOpen ? 'rotate-180' : ''
                     }`}
                   />
@@ -356,7 +356,7 @@ export default function GuidePage() {
 
                 {/* Phase steps */}
                 {isOpen && (
-                  <div className="border-t border-gray-100 divide-y divide-gray-100">
+                  <div className="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
                     {phase.steps.map((step) => {
                       const sp = getStepProgress(step.key)
                       const completed = sp?.completed || false
@@ -367,7 +367,7 @@ export default function GuidePage() {
                         <div
                           key={step.key}
                           className={`flex items-start gap-4 px-6 py-4 transition-colors ${
-                            completed ? 'bg-gray-50/50' : ''
+                            completed ? 'bg-gray-50/50 dark:bg-gray-700/30' : ''
                           }`}
                         >
                           {/* Checkbox area */}
@@ -377,7 +377,7 @@ export default function GuidePage() {
                                 className={`flex h-6 w-6 items-center justify-center rounded-full ${
                                   completed
                                     ? 'bg-green-500 text-white'
-                                    : 'border-2 border-gray-300 bg-white'
+                                    : 'border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                                 }`}
                               >
                                 {completed && (
@@ -392,7 +392,7 @@ export default function GuidePage() {
                                 className={`flex h-6 w-6 items-center justify-center rounded-full transition-colors ${
                                   completed
                                     ? 'bg-green-500 text-white hover:bg-green-600'
-                                    : 'border-2 border-gray-300 bg-white hover:border-brand-400'
+                                    : 'border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-brand-400'
                                 } ${isToggling ? 'opacity-50' : ''}`}
                               >
                                 {isToggling ? (
@@ -409,13 +409,13 @@ export default function GuidePage() {
                             <div className="flex items-center gap-2">
                               <span
                                 className={`text-sm font-medium ${
-                                  completed ? 'text-gray-400 line-through' : 'text-gray-900'
+                                  completed ? 'text-gray-400 dark:text-gray-500 line-through' : 'text-gray-900 dark:text-white'
                                 }`}
                               >
                                 {step.title}
                               </span>
                               {isAuto && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
                                   <Bot className="h-3 w-3" />
                                   auto
                                 </span>
@@ -423,7 +423,7 @@ export default function GuidePage() {
                             </div>
                             <p
                               className={`mt-0.5 text-sm ${
-                                completed ? 'text-gray-400' : 'text-gray-500'
+                                completed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-500 dark:text-gray-400'
                               }`}
                             >
                               {step.description}
@@ -433,7 +433,7 @@ export default function GuidePage() {
                           {/* Action button */}
                           <Link
                             href={step.href}
-                            className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 hover:text-brand-600"
+                            className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 hover:text-brand-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600"
                           >
                             <step.icon className="h-3.5 w-3.5" />
                             Acceder
@@ -452,7 +452,7 @@ export default function GuidePage() {
 
       {/* FAQ */}
       <div>
-        <h3 className="mb-6 text-xl font-bold text-gray-900">Questions frequentes</h3>
+        <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-white">Questions frequentes</h3>
         <div className="space-y-4">
           {[
             {
@@ -482,13 +482,13 @@ export default function GuidePage() {
           ].map((faq, i) => (
             <details
               key={i}
-              className="group rounded-xl border border-gray-200 bg-white shadow-sm"
+              className="group rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm"
             >
-              <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-medium text-gray-900">
+              <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-medium text-gray-900 dark:text-white">
                 {faq.q}
                 <ChevronIcon />
               </summary>
-              <div className="border-t border-gray-100 px-5 py-4 text-sm leading-relaxed text-gray-600">
+              <div className="border-t border-gray-100 dark:border-gray-700 px-5 py-4 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
                 {faq.a}
               </div>
             </details>
@@ -526,7 +526,7 @@ export default function GuidePage() {
 function ChevronIcon() {
   return (
     <svg
-      className="h-5 w-5 flex-shrink-0 text-gray-400 transition-transform group-open:rotate-180"
+      className="h-5 w-5 flex-shrink-0 text-gray-400 dark:text-gray-500 transition-transform group-open:rotate-180"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"

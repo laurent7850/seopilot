@@ -151,8 +151,8 @@ export default function CalendarPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Calendrier de publication</h2>
-          <p className="mt-1 text-sm text-gray-500">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Calendrier de publication</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Visualisez et planifiez vos publications.
           </p>
         </div>
@@ -160,7 +160,7 @@ export default function CalendarPage() {
           <select
             value={selectedSiteId || ''}
             onChange={(e) => setSelectedSiteId(e.target.value || undefined)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+            className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white px-3 py-2 text-sm"
           >
             <option value="">Tous les sites</option>
             {sites.map((s: any) => (
@@ -171,13 +171,13 @@ export default function CalendarPage() {
       </div>
 
       {/* Calendar header */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-5 py-4">
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={prevMonth}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {MONTHS_FR[currentMonth]} {currentYear}
             </h3>
             <Button variant="outline" size="sm" onClick={nextMonth}>
@@ -199,7 +199,7 @@ export default function CalendarPage() {
             {/* Day headers */}
             <div className="grid grid-cols-7 gap-1 mb-1">
               {DAYS_FR.map((day) => (
-                <div key={day} className="py-2 text-center text-xs font-medium uppercase text-gray-500">
+                <div key={day} className="py-2 text-center text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
                   {day}
                 </div>
               ))}
@@ -209,7 +209,7 @@ export default function CalendarPage() {
             <div className="grid grid-cols-7 gap-1">
               {calendarDays.map((day, idx) => {
                 if (day === null) {
-                  return <div key={`empty-${idx}`} className="min-h-[100px] rounded-lg bg-gray-50" />
+                  return <div key={`empty-${idx}`} className="min-h-[100px] rounded-lg bg-gray-50 dark:bg-gray-700" />
                 }
 
                 const dateKey = getDateKey(day)
@@ -227,7 +227,7 @@ export default function CalendarPage() {
                         ? 'border-brand-300 bg-brand-50'
                         : selectedDay === day
                         ? 'border-yellow-300 bg-yellow-50'
-                        : 'border-gray-100 bg-white hover:bg-gray-50',
+                        : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700',
                       future && 'cursor-pointer'
                     )}
                   >
@@ -236,7 +236,7 @@ export default function CalendarPage() {
                         'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium',
                         isToday(day)
                           ? 'bg-brand-600 text-white'
-                          : 'text-gray-700'
+                          : 'text-gray-700 dark:text-gray-200'
                       )}
                     >
                       {day}
@@ -271,7 +271,7 @@ export default function CalendarPage() {
 
       {/* Schedule panel */}
       {selectedDay !== null && (
-        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-5">
+        <div className="rounded-xl border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 p-5">
           <div className="flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-sm font-semibold text-yellow-800">
               <Clock className="h-4 w-4" />
@@ -290,7 +290,7 @@ export default function CalendarPage() {
                 <select
                   value={schedArticleId}
                   onChange={(e) => setSchedArticleId(e.target.value)}
-                  className="w-full rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-yellow-300 dark:border-yellow-700 bg-white dark:bg-gray-700 dark:text-white px-3 py-2 text-sm"
                 >
                   <option value="">Choisir un article...</option>
                   {draftArticles.map((a: any) => (
@@ -304,7 +304,7 @@ export default function CalendarPage() {
                   type="time"
                   value={schedTime}
                   onChange={(e) => setSchedTime(e.target.value)}
-                  className="rounded-lg border border-yellow-300 bg-white px-3 py-2 text-sm"
+                  className="rounded-lg border border-yellow-300 dark:border-yellow-700 bg-white dark:bg-gray-700 dark:text-white px-3 py-2 text-sm"
                 />
               </div>
               <Button
@@ -326,7 +326,7 @@ export default function CalendarPage() {
         {Object.entries(statusColors).map(([status, color]) => (
           <div key={status} className="flex items-center gap-1.5">
             <span className={cn('h-3 w-3 rounded', color)} />
-            <span className="text-gray-600">
+            <span className="text-gray-600 dark:text-gray-300">
               {status === 'DRAFT' ? 'Brouillon' : status === 'SCHEDULED' ? 'Planifie' : status === 'PUBLISHED' ? 'Publie' : 'Erreur'}
             </span>
           </div>

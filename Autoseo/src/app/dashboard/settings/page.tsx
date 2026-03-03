@@ -184,27 +184,27 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Parametres</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Parametres</h1>
 
       {/* Profile */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-          <User className="h-5 w-5 text-gray-500" />
-          <h2 className="text-lg font-semibold text-gray-900">Profil</h2>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
+        <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-4">
+          <User className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Profil</h2>
         </div>
         <div className="mt-6 grid gap-6 sm:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Nom</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Nom</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <div className="mt-1 flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
+            <div className="mt-1 flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
               <Mail className="h-4 w-4" />
               {email}
             </div>
@@ -223,11 +223,11 @@ export default function SettingsPage() {
       </div>
 
       {/* Notifications */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-4">
           <div className="flex items-center gap-3">
-            <Bell className="h-5 w-5 text-gray-500" />
-            <h2 className="text-lg font-semibold text-gray-900">Notifications email</h2>
+            <Bell className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications email</h2>
           </div>
           <Button
             variant="outline"
@@ -253,8 +253,8 @@ export default function SettingsPage() {
             notifItems.map((notif) => (
               <div key={notif.key} className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{notif.label}</p>
-                  <p className="text-sm text-gray-500">{notif.desc}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{notif.label}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{notif.desc}</p>
                 </div>
                 <label className="relative inline-flex cursor-pointer items-center">
                   <input
@@ -264,7 +264,7 @@ export default function SettingsPage() {
                     className="peer sr-only"
                     disabled={notifSaving}
                   />
-                  <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-brand-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
+                  <div className="peer h-6 w-11 rounded-full bg-gray-200 dark:bg-gray-600 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 dark:after:border-gray-500 after:bg-white after:transition-all after:content-[''] peer-checked:bg-brand-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
                 </label>
               </div>
             ))
@@ -273,16 +273,16 @@ export default function SettingsPage() {
       </div>
 
       {/* Plan / Abonnement */}
-      <div id="plan" className="rounded-xl border border-gray-200 bg-white p-6">
-        <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-          <CreditCard className="h-5 w-5 text-gray-500" />
-          <h2 className="text-lg font-semibold text-gray-900">Abonnement</h2>
+      <div id="plan" className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
+        <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-4">
+          <CreditCard className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Abonnement</h2>
         </div>
         <div className="mt-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Plan actuel</p>
-              <p className="mt-1 text-xl font-bold text-gray-900">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Plan actuel</p>
+              <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
                 {((session?.user as any)?.plan || 'FREE').toUpperCase()}
               </p>
             </div>
@@ -292,17 +292,17 @@ export default function SettingsPage() {
               {((session?.user as any)?.plan || 'FREE').toUpperCase()}
             </span>
           </div>
-          <p className="mt-4 text-sm text-gray-500">
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
             Pour changer de plan ou gerer votre abonnement, contactez le support.
           </p>
         </div>
       </div>
 
       {/* Security */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
-          <Shield className="h-5 w-5 text-gray-500" />
-          <h2 className="text-lg font-semibold text-gray-900">Securite</h2>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
+        <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-4">
+          <Shield className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Securite</h2>
         </div>
         <div className="mt-6 space-y-6">
           {/* Password change */}
@@ -311,52 +311,52 @@ export default function SettingsPage() {
               Changer le mot de passe
             </Button>
           ) : (
-            <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <h3 className="text-sm font-medium text-gray-900">Changer le mot de passe</h3>
+            <div className="space-y-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 p-4">
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Changer le mot de passe</h3>
               <div>
-                <label className="block text-sm text-gray-700">Mot de passe actuel</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-200">Mot de passe actuel</label>
                 <div className="relative mt-1">
                   <input
                     type={showCurrentPw ? 'text' : 'password'}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 pr-10 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPw(!showCurrentPw)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     {showCurrentPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-700">Nouveau mot de passe</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-200">Nouveau mot de passe</label>
                 <div className="relative mt-1">
                   <input
                     type={showNewPw ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Minimum 8 caracteres"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 pr-10 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPw(!showNewPw)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-700">Confirmer le nouveau mot de passe</label>
+                <label className="block text-sm text-gray-700 dark:text-gray-200">Confirmer le nouveau mot de passe</label>
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                 />
               </div>
               <div className="flex gap-2">
@@ -377,18 +377,18 @@ export default function SettingsPage() {
               <Button variant="destructive" size="sm" onClick={() => setShowDeleteForm(true)}>
                 Supprimer mon compte
               </Button>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Cette action est irreversible et supprimera toutes vos donnees.
               </p>
             </div>
           ) : (
-            <div className="space-y-4 rounded-lg border border-red-200 bg-red-50 p-4">
-              <h3 className="text-sm font-semibold text-red-800">Supprimer definitivement votre compte</h3>
-              <p className="text-sm text-red-700">
+            <div className="space-y-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-4">
+              <h3 className="text-sm font-semibold text-red-800 dark:text-red-400">Supprimer definitivement votre compte</h3>
+              <p className="text-sm text-red-700 dark:text-red-300">
                 Cette action est <strong>irreversible</strong>. Tous vos sites, articles, mots-cles, backlinks et analytics seront supprimes.
               </p>
               <div>
-                <label className="block text-sm font-medium text-red-800">
+                <label className="block text-sm font-medium text-red-800 dark:text-red-400">
                   Tapez <strong>SUPPRIMER</strong> pour confirmer
                 </label>
                 <input
@@ -396,7 +396,7 @@ export default function SettingsPage() {
                   value={deleteConfirmation}
                   onChange={(e) => setDeleteConfirmation(e.target.value)}
                   placeholder="SUPPRIMER"
-                  className="mt-1 w-full rounded-lg border border-red-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  className="mt-1 w-full rounded-lg border border-red-300 dark:border-red-700 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                 />
               </div>
               <div className="flex gap-2">
