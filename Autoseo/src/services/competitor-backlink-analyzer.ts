@@ -49,8 +49,15 @@ Ton role est d'analyser un site web, identifier ses principaux concurrents dans 
 Site de l'utilisateur: ${siteUrl}
 Niche: ${siteNiche}${existingContext}
 
+REGLE ABSOLUE - URLS REELLES UNIQUEMENT:
+- Tu ne dois JAMAIS inventer ou halluciner des URLs ou noms de domaines.
+- Chaque URL de concurrent doit etre un VRAI site web connu et existant que tu peux verifier.
+- Si tu n'es pas certain qu'un site existe, NE L'INCLUS PAS.
+- Prefere des sites connus et etablis dans la niche plutot que d'inventer des noms qui "sonnent bien".
+- Pour les opportunites de backlinks, utilise des plateformes connues et verifiables (ex: annuaires reels, blogs connus, forums populaires).
+
 INSTRUCTIONS:
-1. Identifie 3 a 5 concurrents probables de ce site dans la meme niche
+1. Identifie 3 a 5 concurrents REELS et VERIFIES de ce site dans la meme niche
 2. Pour chaque concurrent, estime ses forces et faiblesses en matiere de backlinks
 3. Genere 15 a 25 opportunites de backlinks CONCRETES et ACTIONNABLES inspirees de ce que les concurrents font probablement
 4. Trie les opportunites par score de priorite (1-100)
@@ -107,15 +114,20 @@ Reponds en JSON valide:
 
   const parsed = JSON.parse(content)
 
+  // Verify competitor URLs actually exist
+  const rawCompetitors = (parsed.competitors || []).map((c: any) => ({
+    name: c.name || 'Inconnu',
+    url: c.url || '',
+    estimatedStrengths: Array.isArray(c.estimatedStrengths) ? c.estimatedStrengths : [],
+    estimatedWeaknesses: Array.isArray(c.estimatedWeaknesses) ? c.estimatedWeaknesses : [],
+    nicheAuthority: ['low', 'medium', 'high'].includes(c.nicheAuthority) ? c.nicheAuthority : 'medium',
+  }))
+
+  const verifiedCompetitors = await verifyCompetitorUrls(rawCompetitors)
+
   return {
     summary: parsed.summary || '',
-    competitors: (parsed.competitors || []).map((c: any) => ({
-      name: c.name || 'Inconnu',
-      url: c.url || '',
-      estimatedStrengths: Array.isArray(c.estimatedStrengths) ? c.estimatedStrengths : [],
-      estimatedWeaknesses: Array.isArray(c.estimatedWeaknesses) ? c.estimatedWeaknesses : [],
-      nicheAuthority: ['low', 'medium', 'high'].includes(c.nicheAuthority) ? c.nicheAuthority : 'medium',
-    })),
+    competitors: verifiedCompetitors,
     opportunities: (parsed.opportunities || []).map((o: any) => ({
       source: o.source || '',
       sourceType: o.sourceType || 'Autre',
@@ -129,4 +141,40 @@ Reponds en JSON valide:
     })).sort((a: CompetitorOpportunity, b: CompetitorOpportunity) => b.priorityScore - a.priorityScore),
     quickWins: Array.isArray(parsed.quickWins) ? parsed.quickWins : [],
   }
+}
+
+async function verifyCompetitorUrls(competitors: CompetitorInsight[]): Promise<CompetitorInsight[]> {
+  const results = await Promise.all(
+    competitors.map(async (c) => {
+      if (!c.url) return { ...c, verified: false }
+      try {
+        let url = c.url.trim()
+        if (!/^https?:\/\//i.test(url)) url = `https://${url}`
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 8000)
+        const res = await fetch(url, {
+          method: 'HEAD',
+          signal: controller.signal,
+          redirect: 'follow',
+          headers: { 'User-Agent': 'SEOPilot-Verifier/1.0' },
+        })
+        clearTimeout(timeout)
+        return { ...c, url, verified: res.status < 500 }
+      } catch {
+        return { ...c, verified: false }
+      }
+    })
+  )
+
+  const verified = results.filter((c) => (c as any).verified)
+  const unverified = results.filter((c) => !(c as any).verified)
+
+  // Return verified ones first, mark unverified with a note
+  return [
+    ...verified.map(({ verified: _, ...c }) => c as CompetitorInsight),
+    ...unverified.map(({ verified: _, ...c }) => ({
+      ...c as CompetitorInsight,
+      estimatedWeaknesses: [...(c.estimatedWeaknesses || []), '⚠ URL non verifiee'],
+    })),
+  ]
 }
