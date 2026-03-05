@@ -20,6 +20,7 @@ set -e
 
 APP_NAME="seopilot"
 COMPOSE_FILE="docker-compose.yml"
+ENV_MODE="PRODUCTION"
 
 # Colors
 RED='\033[0;31m'
@@ -55,6 +56,12 @@ check_env() {
         error "Changez DB_PASSWORD dans .env"
     fi
 
+    # Guard: prevent running production deploy with dev config
+    if [ "${NODE_ENV:-}" = "development" ]; then
+        error "NODE_ENV=development detecte. Ce script est reserve a la PRODUCTION."
+    fi
+
+    log "Environnement: $ENV_MODE"
     log "Variables d'environnement OK"
 }
 

@@ -1,0 +1,46 @@
+# ========================================
+# SEOPilot - Docker Compose DEVELOPPEMENT
+# ========================================
+# Usage: docker compose -f docker-compose.dev.yml up -d
+# Ou simplement: ./dev.sh start
+#
+# Fournit PostgreSQL et Redis pour le dev local.
+# L'app Next.js tourne directement sur la machine (npm run dev).
+# Ports differents de la production pour eviter tout conflit.
+
+services:
+  dev-postgres:
+    image: postgres:16-alpine
+    container_name: seopilot-dev-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: seopilot
+      POSTGRES_PASSWORD: devpassword
+      POSTGRES_DB: seopilot_dev
+    volumes:
+      - seopilot_dev_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seopilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  dev-redis:
+    image: redis:7-alpine
+    container_name: seopilot-dev-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - seopilot_dev_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  seopilot_dev_postgres:
+  seopilot_dev_redis:
