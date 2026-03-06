@@ -45,13 +45,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (article.status === 'PUBLISHED') {
-      return NextResponse.json(
-        { error: 'Article is already published' },
-        { status: 400 }
-      )
-    }
-
     if (!article.content) {
       return NextResponse.json(
         { error: 'Article has no content to publish' },
@@ -109,6 +102,7 @@ export async function POST(request: NextRequest) {
     if (site.webhookUrl) {
       const result = await publishViaWebhook({
         webhookUrl: site.webhookUrl,
+        webhookSecret: site.webhookSecret || undefined,
         article: {
           title: article.title,
           content: article.content,

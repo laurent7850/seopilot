@@ -21,7 +21,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
-import { useArticle, updateArticle, deleteArticle } from '@/hooks/use-api'
+import { useArticle, updateArticle, deleteArticle, publishArticle } from '@/hooks/use-api'
 
 const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
   DRAFT: { label: 'Brouillon', bg: 'bg-gray-100', text: 'text-gray-700' },
@@ -110,11 +110,15 @@ export default function ArticleDetailPage() {
   }
 
   const handlePublish = async () => {
-    if (!confirm('Marquer cet article comme publie ?')) return
+    if (!confirm('Publier cet article sur le site ?')) return
     setPublishing(true)
     try {
-      await updateArticle(id, { status: 'PUBLISHED' })
-      toast.success('Article marque comme publie')
+      const result = await publishArticle(id)
+      if (result.postUrl) {
+        toast.success(`Article publie sur ${result.postUrl}`)
+      } else {
+        toast.success('Article publie avec succes')
+      }
       refetch()
     } catch (err: any) {
       toast.error(err.message)
