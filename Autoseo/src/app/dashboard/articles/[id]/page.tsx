@@ -227,27 +227,25 @@ export default function ArticleDetailPage() {
                 Modifier
               </Button>
               {article.status !== 'PUBLISHED' && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 text-yellow-700 hover:bg-yellow-50"
-                    onClick={() => setShowScheduler(!showScheduler)}
-                  >
-                    <Clock className="h-4 w-4" />
-                    Planifier
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="gap-2 bg-green-600 hover:bg-green-700"
-                    onClick={handlePublish}
-                    disabled={publishing}
-                  >
-                    {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    Publier
-                  </Button>
-                </>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 text-yellow-700 hover:bg-yellow-50"
+                  onClick={() => setShowScheduler(!showScheduler)}
+                >
+                  <Clock className="h-4 w-4" />
+                  Planifier
+                </Button>
               )}
+              <Button
+                size="sm"
+                className="gap-2 bg-green-600 hover:bg-green-700"
+                onClick={handlePublish}
+                disabled={publishing}
+              >
+                {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {article.status === 'PUBLISHED' ? 'Republier' : 'Publier'}
+              </Button>
             </>
           )}
           {editing && (
