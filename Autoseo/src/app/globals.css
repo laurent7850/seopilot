@@ -22,3 +22,57 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Article content styling (dashboard) */
+.article-content {
+  color: #111827;
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4 {
+  color: #111827;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.article-content h1 { font-size: 1.5rem; }
+.article-content h2 { font-size: 1.25rem; }
+.article-content h3 { font-size: 1.1rem; }
+
+.article-content p {
+  color: #1f2937;
+  margin-bottom: 1em;
+}
+
+.article-content ul,
+.article-content ol {
+  color: #1f2937;
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.article-content li {
+  margin-bottom: 0.25em;
+}
+
+.article-content a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.article-content strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.article-content blockquote {
+  border-left: 3px solid #d1d5db;
+  padding-left: 1em;
+  color: #4b5563;
+  font-style: italic;
+}

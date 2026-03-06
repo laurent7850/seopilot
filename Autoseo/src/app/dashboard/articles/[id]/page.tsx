@@ -450,12 +450,12 @@ export default function ArticleDetailPage() {
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="min-h-[400px] w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm leading-relaxed"
+              className="min-h-[400px] w-full rounded-lg border border-gray-300 bg-white px-4 py-3 font-mono text-sm leading-relaxed text-gray-900"
             />
           </div>
         ) : (
           <div
-            className="prose prose-sm max-w-none px-5 py-5"
+            className="article-content max-w-none px-5 py-5"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
         )}
