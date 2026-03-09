@@ -334,6 +334,72 @@ export async function checkBacklinksApi(siteId: string, backlinkIds?: string[]) 
   return res.json()
 }
 
+// --- GA4 Auth ---
+export async function getGA4AuthUrl(siteId: string): Promise<string> {
+  const res = await fetch(`/api/integrations/ga4/auth?siteId=${siteId}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to get GA4 auth URL')
+  }
+  const data = await res.json()
+  return data.authUrl
+}
+
+// --- GA4 Properties ---
+export async function fetchGA4Properties(siteId: string) {
+  const res = await fetch(`/api/integrations/ga4/properties?siteId=${siteId}`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to fetch GA4 properties')
+  }
+  return res.json()
+}
+
+export async function saveGA4Property(siteId: string, propertyId: string) {
+  const res = await fetch('/api/integrations/ga4/properties', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siteId, propertyId }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to save GA4 property')
+  }
+  return res.json()
+}
+
+// --- GA4 Data ---
+interface GA4DataResponse {
+  overview: {
+    sessions: number
+    totalUsers: number
+    newUsers: number
+    pageViews: number
+    avgSessionDuration: number
+    bounceRate: number
+  }
+  previousOverview: {
+    sessions: number
+    totalUsers: number
+    newUsers: number
+    pageViews: number
+    avgSessionDuration: number
+    bounceRate: number
+  }
+  daily: Array<{ date: string; sessions: number; users: number; pageViews: number }>
+  sources: Array<{ source: string; medium: string; sessions: number; users: number; bounceRate: number }>
+  topPages: Array<{ pagePath: string; pageViews: number; users: number }>
+  fetchedAt: string
+}
+
+export function useGA4Data(siteId?: string, days?: number) {
+  const params = new URLSearchParams()
+  if (siteId) params.set('siteId', siteId)
+  if (days) params.set('days', days.toString())
+  const url = siteId ? `/api/integrations/ga4/data?${params}` : null
+  return useApi<GA4DataResponse>(url)
+}
+
 // --- GSC Auth ---
 export async function getGSCAuthUrl(siteId: string): Promise<string> {
   const res = await fetch(`/api/integrations/gsc/auth?siteId=${siteId}`)

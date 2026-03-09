@@ -155,6 +155,9 @@ model Site {
   gscPropertyUrl  String?  // Google Search Console property URL
   gscAccessToken  String?  @db.Text
   gscRefreshToken String?  @db.Text
+  ga4PropertyId   String?          // GA4 property ID (ex: "properties/123456789")
+  ga4AccessToken  String?  @db.Text
+  ga4RefreshToken String?  @db.Text
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
 
@@ -164,6 +167,7 @@ model Site {
   backlinks          Backlink[]
   analyticsSnapshots AnalyticsSnapshot[]
   audits             SiteAudit[]
+  crawlSessions      CrawlSession[]
 
   @@unique([userId, url])
   @@index([userId])
@@ -323,6 +327,74 @@ model SiteAudit {
   site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
   @@index([siteId, createdAt])
+}
+
+// --------------------------------------------------------------------------
+// CrawlSession (multi-page site crawl)
+// --------------------------------------------------------------------------
+
+enum CrawlStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model CrawlSession {
+  id            String      @id @default(cuid())
+  siteId        String
+  status        CrawlStatus @default(PENDING)
+  pagesFound    Int         @default(0)
+  pagesCrawled  Int         @default(0)
+  maxPages      Int         @default(50)
+  issuesCount   Int         @default(0)
+  score         Int?        // 0-100 global crawl score
+  errorMessage  String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime    @default(now())
+
+  site  Site        @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  pages CrawlPage[]
+
+  @@index([siteId, createdAt])
+  @@index([status])
+}
+
+// --------------------------------------------------------------------------
+// CrawlPage (per-page SEO data from crawl)
+// --------------------------------------------------------------------------
+
+model CrawlPage {
+  id              String   @id @default(cuid())
+  crawlSessionId  String
+  url             String
+  statusCode      Int?
+  title           String?
+  metaDescription String?
+  h1              String?
+  h1Count         Int      @default(0)
+  h2Count         Int      @default(0)
+  wordCount       Int      @default(0)
+  imagesTotal     Int      @default(0)
+  imagesWithAlt   Int      @default(0)
+  internalLinks   Int      @default(0)
+  externalLinks   Int      @default(0)
+  hasCanonical    Boolean  @default(false)
+  canonicalUrl    String?
+  hasOgTags       Boolean  @default(false)
+  hasJsonLd       Boolean  @default(false)
+  loadTimeMs      Int?
+  contentHash     String?  // for duplicate content detection
+  issues          Json     // CrawlPageIssue[] serialized
+  depth           Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  crawlSession CrawlSession @relation(fields: [crawlSessionId], references: [id], onDelete: Cascade)
+
+  @@unique([crawlSessionId, url])
+  @@index([crawlSessionId])
+  @@index([statusCode])
 }
 
 // --------------------------------------------------------------------------
