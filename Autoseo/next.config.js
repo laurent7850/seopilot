@@ -3,7 +3,7 @@ const nextConfig = {
   output: 'standalone',
   experimental: {
     instrumentationHook: true,
-    serverComponentsExternalPackages: ['pdfkit'],
+    serverComponentsExternalPackages: ['pdfkit', 'bullmq', 'ioredis'],
   },
   images: {
     remotePatterns: [
