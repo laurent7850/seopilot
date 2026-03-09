@@ -394,7 +394,7 @@ export default function AnalyticsPage() {
                       <circle cx="17.5" cy="4.5" r="2.5" fill="#F4B400"/>
                     </svg>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Google Analytics (GA4)
+                      Google Analytics (GA4) — {activeSite?.name}
                     </h3>
                     <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-400">
                       Connecte
