@@ -100,6 +100,15 @@ export async function POST(request: NextRequest) {
 
     // Try webhook publishing
     if (site.webhookUrl) {
+      // Generate short excerpt (~60 chars to match blog card style)
+      const plainText = article.content
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      const excerpt = plainText.length > 60
+        ? plainText.slice(0, 60).replace(/\s\S*$/, '')
+        : plainText
+
       const result = await publishViaWebhook({
         webhookUrl: site.webhookUrl,
         webhookSecret: site.webhookSecret || undefined,
@@ -107,8 +116,13 @@ export async function POST(request: NextRequest) {
           title: article.title,
           content: article.content,
           slug: article.slug,
+          excerpt,
           metaTitle: article.metaTitle,
           metaDescription: article.metaDescription,
+          // Also send fields expected by distr-action blog API
+          seo_title: article.metaTitle,
+          seo_description: article.metaDescription,
+          status: 'published',
         },
       })
 

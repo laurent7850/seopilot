@@ -1,6 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   TrendingUp,
   FileText,
@@ -13,10 +14,30 @@ import {
   Loader2,
   ClipboardCheck,
   Download,
+  AlertTriangle,
+  AlertCircle,
+  Info,
+  ChevronRight,
+  Image,
+  Zap,
+  FileWarning,
+  Link as LinkIcon,
+  LayoutList,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { useDashboardStats, useSites } from '@/hooks/use-api'
+
+interface SeoAction {
+  id: string
+  priority: 'critical' | 'high' | 'medium' | 'low'
+  category: 'meta' | 'content' | 'links' | 'images' | 'structure' | 'performance'
+  title: string
+  description: string
+  url?: string
+  source: 'crawl' | 'audit'
+  impact: number
+}
 
 const statusBadge: Record<string, string> = {
   PUBLISHED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
@@ -32,13 +53,57 @@ const statusLabel: Record<string, string> = {
   FAILED: 'Erreur',
 }
 
+const priorityConfig = {
+  critical: { label: 'Critique', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', dot: 'bg-red-500' },
+  high: { label: 'Eleve', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', dot: 'bg-orange-500' },
+  medium: { label: 'Moyen', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', dot: 'bg-yellow-500' },
+  low: { label: 'Faible', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', dot: 'bg-blue-500' },
+}
+
+const categoryIcons: Record<string, any> = {
+  meta: FileWarning,
+  content: FileText,
+  links: LinkIcon,
+  images: Image,
+  structure: LayoutList,
+  performance: Zap,
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { data, loading } = useDashboardStats()
   const { sites } = useSites()
 
+  const [seoActions, setSeoActions] = useState<SeoAction[]>([])
+  const [actionsLoading, setActionsLoading] = useState(false)
+  const [actionsTotal, setActionsTotal] = useState(0)
+  const [crawlScore, setCrawlScore] = useState<number | null>(null)
+
   const stats = data?.stats
   const recentArticles = data?.recentArticles || []
+
+  const loadSeoActions = useCallback(async (siteId: string) => {
+    setActionsLoading(true)
+    try {
+      const res = await fetch(`/api/seo-actions?siteId=${siteId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSeoActions(data.actions || [])
+        setActionsTotal(data.totalActions || 0)
+        setCrawlScore(data.crawlScore)
+      }
+    } catch (e) {
+      console.error('Failed to load SEO actions:', e)
+    } finally {
+      setActionsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (sites.length > 0) {
+      loadSeoActions(sites[0].id)
+    }
+  }, [sites, loadSeoActions])
 
   const statCards = [
     {
@@ -160,6 +225,100 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* SEO Action Priority Queue */}
+      {sites.length > 0 && (
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                Actions SEO prioritaires
+              </h3>
+              {actionsTotal > 0 && (
+                <span className="ml-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                  {actionsTotal}
+                </span>
+              )}
+            </div>
+            <Link href="/dashboard/audit">
+              <Button variant="outline" size="sm" className="gap-1 text-xs">
+                Voir l'audit complet
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="p-5">
+            {actionsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              </div>
+            ) : seoActions.length === 0 ? (
+              <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                <p>Aucune action SEO detectee.</p>
+                <p className="mt-1">Lancez un crawl ou un audit technique depuis la page Audit.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {crawlScore !== null && (
+                  <div className="mb-4 flex items-center gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-700/50">
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold text-white ${
+                      crawlScore >= 80 ? 'bg-green-500' : crawlScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}>
+                      {crawlScore}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">Score SEO du site</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Base sur le dernier crawl multi-pages
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {seoActions.slice(0, 8).map((action) => {
+                  const Icon = categoryIcons[action.category] || AlertCircle
+                  const prio = priorityConfig[action.priority]
+                  return (
+                    <div
+                      key={action.id}
+                      className="flex items-start gap-3 rounded-lg border border-gray-100 p-3 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50"
+                    >
+                      <div className={`mt-0.5 h-2 w-2 rounded-full flex-shrink-0 ${prio.dot}`} />
+                      <Icon className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-400" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {action.title}
+                          </p>
+                          <span className={`inline-flex flex-shrink-0 items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${prio.color}`}>
+                            {prio.label}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {action.description}
+                        </p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <span className="text-[10px] text-gray-400 uppercase">{action.source}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {actionsTotal > 8 && (
+                  <Link href="/dashboard/audit" className="block text-center">
+                    <p className="text-xs text-brand-600 hover:text-brand-700 dark:text-brand-400">
+                      + {actionsTotal - 8} autres actions a traiter
+                    </p>
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Recent articles */}

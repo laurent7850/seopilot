@@ -8,10 +8,14 @@ import {
   Search,
   Filter,
   Loader2,
+  Edit3,
+  Trash2,
+  Send,
+  MoreVertical,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
-import { useArticles, useSites, generateArticle } from '@/hooks/use-api'
+import { useArticles, useSites, generateArticle, deleteArticle, publishArticle } from '@/hooks/use-api'
 
 const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
   DRAFT: { label: 'Brouillon', bg: 'bg-gray-100 dark:bg-gray-700', text: 'text-gray-700 dark:text-gray-200' },
@@ -28,6 +32,9 @@ export default function ArticlesPage() {
   const [showGenerate, setShowGenerate] = useState(false)
   const [genKeyword, setGenKeyword] = useState('')
   const [genSiteId, setGenSiteId] = useState('')
+  const [actionMenuId, setActionMenuId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [publishingId, setPublishingId] = useState<string | null>(null)
 
   const { articles, loading, error, refetch } = useArticles(
     undefined,
@@ -61,6 +68,36 @@ export default function ArticlesPage() {
       toast.error(err.message)
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const handleDelete = async (e: React.MouseEvent, articleId: string, title: string) => {
+    e.stopPropagation()
+    if (!confirm(`Supprimer l'article "${title}" ? Cette action est irreversible.`)) return
+    setDeletingId(articleId)
+    try {
+      await deleteArticle(articleId)
+      toast.success('Article supprime')
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la suppression')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handlePublish = async (e: React.MouseEvent, articleId: string) => {
+    e.stopPropagation()
+    if (!confirm('Publier cet article sur le blog du site ?')) return
+    setPublishingId(articleId)
+    try {
+      const result = await publishArticle(articleId)
+      toast.success(result.postUrl ? `Article publie ! ${result.postUrl}` : 'Article publie !')
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la publication')
+    } finally {
+      setPublishingId(null)
     }
   }
 
@@ -145,18 +182,19 @@ export default function ArticlesPage() {
                 <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Score SEO</th>
                 <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Mots</th>
                 <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
+                <th className="px-5 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center">
+                  <td colSpan={7} className="px-5 py-12 text-center">
                     <Loader2 className="mx-auto h-6 w-6 animate-spin text-gray-400" />
                   </td>
                 </tr>
               ) : filteredArticles.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                     Aucun article trouve.
                   </td>
                 </tr>
@@ -197,6 +235,41 @@ export default function ArticlesPage() {
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-500 dark:text-gray-400">
                         {new Date(article.createdAt).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); window.location.href = `/dashboard/articles/${article.id}` }}
+                            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-600 dark:hover:text-blue-400"
+                            title="Modifier"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={(e) => handlePublish(e, article.id)}
+                            disabled={publishingId === article.id}
+                            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-green-600 dark:hover:bg-gray-600 dark:hover:text-green-400 disabled:opacity-50"
+                            title={article.status === 'PUBLISHED' ? 'Republier' : 'Publier'}
+                          >
+                            {publishingId === article.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Send className="h-4 w-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={(e) => handleDelete(e, article.id, article.title)}
+                            disabled={deletingId === article.id}
+                            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-600 dark:hover:text-red-400 disabled:opacity-50"
+                            title="Supprimer"
+                          >
+                            {deletingId === article.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )

@@ -2,6 +2,7 @@ import { startArticleWorker } from './article.worker'
 import { startKeywordWorker } from './keyword.worker'
 import { startPublishWorker } from './publish.worker'
 import { startAnalyticsWorker } from './analytics.worker'
+import { startCrawlWorker } from './crawl.worker'
 import { setupScheduler } from '../lib/scheduler'
 
 async function main() {
@@ -11,6 +12,7 @@ async function main() {
   const keywordWorker = startKeywordWorker()
   const publishWorker = startPublishWorker()
   const analyticsWorker = startAnalyticsWorker()
+  const crawlWorker = startCrawlWorker()
 
   console.log('[workers] All workers started')
 
@@ -26,6 +28,7 @@ async function main() {
       keywordWorker.close(),
       publishWorker.close(),
       analyticsWorker.close(),
+      crawlWorker.close(),
     ])
     console.log('[workers] All workers stopped')
     process.exit(0)

@@ -5,6 +5,7 @@ let _articleQueue: Queue | null = null
 let _keywordQueue: Queue | null = null
 let _publishQueue: Queue | null = null
 let _analyticsQueue: Queue | null = null
+let _crawlQueue: Queue | null = null
 
 export function getArticleQueue(): Queue {
   if (!_articleQueue) {
@@ -32,4 +33,11 @@ export function getAnalyticsQueue(): Queue {
     _analyticsQueue = new Queue('analytics-snapshot', { connection: getRedis() })
   }
   return _analyticsQueue
+}
+
+export function getCrawlQueue(): Queue {
+  if (!_crawlQueue) {
+    _crawlQueue = new Queue('site-crawl', { connection: getRedis() })
+  }
+  return _crawlQueue
 }

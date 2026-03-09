@@ -26,8 +26,26 @@ export async function publishToWordPress(
     status = 'draft',
   } = params
 
-  // Normalize the WordPress URL (remove trailing slash)
-  const baseUrl = wordpressUrl.replace(/\/+$/, '')
+  // Normalize the WordPress URL
+  let baseUrl = wordpressUrl.trim().replace(/\/+$/, '')
+  // Strip any userinfo (user@) that might have been accidentally included
+  baseUrl = baseUrl.replace(/^(https?:\/\/)?[^@]+@/, '$1')
+  // Ensure protocol is present
+  if (!/^https?:\/\//i.test(baseUrl)) {
+    baseUrl = `https://${baseUrl}`
+  }
+  // Validate URL
+  try {
+    const parsed = new URL(baseUrl)
+    if (!parsed.hostname.includes('.')) {
+      throw new Error('invalid hostname')
+    }
+  } catch {
+    return {
+      success: false,
+      error: `URL WordPress invalide: "${wordpressUrl}". Verifiez l'URL dans les parametres du site (ex: https://votresite.com).`,
+    }
+  }
   const endpoint = `${baseUrl}/wp-json/wp/v2/posts`
 
   // The apiKey is expected to be a WordPress application password
@@ -87,7 +105,9 @@ export async function publishViaWebhook(
     'Content-Type': 'application/json',
   }
   if (webhookSecret) {
+    // Support both Bearer token and X-Api-Key header
     headers['Authorization'] = `Bearer ${webhookSecret}`
+    headers['X-Api-Key'] = webhookSecret
   }
 
   try {
@@ -109,8 +129,8 @@ export async function publishViaWebhook(
 
     return {
       success: true,
-      postId: data.id || data.postId,
-      postUrl: data.url || data.postUrl || data.link,
+      postId: data.id || data.postId || data.post?.id,
+      postUrl: data.url || data.postUrl || data.link || data.postUrl,
     }
   } catch (error) {
     return {
