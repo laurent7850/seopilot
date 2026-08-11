@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Blog',
   description:
-    'Guides, conseils et actualites SEO. Apprenez a optimiser votre site web et automatiser votre strategie de contenu avec ' +
+    'Guides pratiques, conseils d\'experts et actualites SEO. Apprenez a optimiser votre referencement naturel, automatiser votre strategie de contenu et booster votre visibilite avec ' +
     siteConfig.name +
     '.',
 }
@@ -152,6 +152,39 @@ export default async function BlogPage() {
                 })}
               </div>
             )}
+          </div>
+        </section>
+
+        {/* SEO Content */}
+        <section className="bg-gray-50 py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Ressources pour optimiser votre referencement naturel
+              </h2>
+              <div className="mt-6 space-y-4 text-gray-600 leading-relaxed">
+                <p>
+                  Le referencement naturel (SEO) evolue constamment. Algorithmes de Google, bonnes pratiques de creation de contenu, strategies de netlinking : notre blog couvre tous les aspects essentiels pour ameliorer la visibilite de votre site web dans les resultats de recherche.
+                </p>
+                <p>
+                  Que vous soyez debutant en SEO ou professionnel du marketing digital, nos articles vous apportent des conseils concrets et actionnables. Nous partageons regulierement nos analyses des dernieres mises a jour algorithmiques, nos retours d&apos;experience sur l&apos;utilisation de l&apos;intelligence artificielle pour la creation de contenu, et nos meilleures strategies pour generer des backlinks de qualite.
+                </p>
+                <p>
+                  {siteConfig.name} vous accompagne dans l&apos;automatisation de votre strategie SEO. De la recherche de mots-cles a la publication d&apos;articles optimises, en passant par le suivi de vos positions et l&apos;analyse de vos performances, notre plateforme simplifie chaque etape de votre referencement. Consultez nos guides pour tirer le meilleur parti de ces outils et accelerer la croissance organique de votre site.
+                </p>
+              </div>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <Link href="/features" className="text-sm font-medium text-brand-600 hover:text-brand-700">
+                  Decouvrir nos fonctionnalites →
+                </Link>
+                <Link href="/pricing" className="text-sm font-medium text-brand-600 hover:text-brand-700">
+                  Voir les tarifs →
+                </Link>
+                <Link href="/contact" className="text-sm font-medium text-brand-600 hover:text-brand-700">
+                  Nous contacter →
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       </main>

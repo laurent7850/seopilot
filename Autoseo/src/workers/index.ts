@@ -3,6 +3,7 @@ import { startKeywordWorker } from './keyword.worker'
 import { startPublishWorker } from './publish.worker'
 import { startAnalyticsWorker } from './analytics.worker'
 import { startCrawlWorker } from './crawl.worker'
+import { startEmailWorker } from './email.worker'
 import { setupScheduler } from '../lib/scheduler'
 
 async function main() {
@@ -13,8 +14,9 @@ async function main() {
   const publishWorker = startPublishWorker()
   const analyticsWorker = startAnalyticsWorker()
   const crawlWorker = startCrawlWorker()
+  const emailWorker = startEmailWorker()
 
-  console.log('[workers] All workers started')
+  console.log('[workers] All workers started (6 workers)')
 
   // Setup recurring CRON jobs
   await setupScheduler()
@@ -29,6 +31,7 @@ async function main() {
       publishWorker.close(),
       analyticsWorker.close(),
       crawlWorker.close(),
+      emailWorker.close(),
     ])
     console.log('[workers] All workers stopped')
     process.exit(0)

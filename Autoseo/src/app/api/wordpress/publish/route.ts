@@ -100,6 +100,12 @@ export async function POST(request: NextRequest) {
 
     // Try webhook publishing
     if (site.webhookUrl) {
+      // Build full webhook URL if relative path provided
+      const siteUrl = site.url.replace(/\/+$/, '')
+      const fullWebhookUrl = site.webhookUrl.startsWith('http')
+        ? site.webhookUrl
+        : `${siteUrl}${site.webhookUrl.startsWith('/') ? '' : '/'}${site.webhookUrl}`
+
       // Generate short excerpt (~60 chars to match blog card style)
       const plainText = article.content
         .replace(/<[^>]+>/g, ' ')
@@ -110,7 +116,7 @@ export async function POST(request: NextRequest) {
         : plainText
 
       const result = await publishViaWebhook({
-        webhookUrl: site.webhookUrl,
+        webhookUrl: fullWebhookUrl,
         webhookSecret: site.webhookSecret || undefined,
         article: {
           title: article.title,
@@ -119,10 +125,12 @@ export async function POST(request: NextRequest) {
           excerpt,
           metaTitle: article.metaTitle,
           metaDescription: article.metaDescription,
-          // Also send fields expected by distr-action blog API
+          // Also send fields expected by distr-action / ainspiration blog APIs
           seo_title: article.metaTitle,
           seo_description: article.metaDescription,
           status: 'published',
+          language: site.language || 'fr',
+          author_name: 'SEOPilot',
         },
       })
 

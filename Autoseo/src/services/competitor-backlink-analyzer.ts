@@ -1,4 +1,4 @@
-import { getOpenAI } from '@/lib/openai'
+import { chatCompletion } from '../lib/llm-provider'
 
 export interface AnalyzeCompetitorParams {
   siteUrl: string
@@ -93,24 +93,13 @@ Reponds en JSON valide:
   "quickWins": ["Action rapide 1", "Action rapide 2"]
 }`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      {
-        role: 'user',
-        content: `Identifie les concurrents de "${siteUrl}" dans la niche "${siteNiche}" et analyse leurs strategies de backlinks pour trouver des opportunites.`,
-      },
-    ],
-    response_format: { type: 'json_object' },
+  const content = await chatCompletion({
+    systemPrompt,
+    userPrompt: `Identifie les concurrents de "${siteUrl}" dans la niche "${siteNiche}" et analyse leurs strategies de backlinks pour trouver des opportunites.`,
+    jsonMode: true,
     temperature: 0.7,
-    max_tokens: 8192,
+    maxTokens: 8192,
   })
-
-  const content = response.choices[0]?.message?.content
-  if (!content) {
-    throw new Error('Aucune reponse de l\'IA')
-  }
 
   const parsed = JSON.parse(content)
 

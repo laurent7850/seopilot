@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma'
-import { refreshAccessToken, fetchSearchPerformance, GSCSearchRow } from '@/services/google-search-console'
+import { prisma } from '../lib/prisma'
+import { refreshAccessToken, fetchSearchPerformance, GSCSearchRow } from './google-search-console'
 
 interface SyncResult {
   synced: number
@@ -56,10 +56,11 @@ export async function syncGSCKeywords(siteId: string): Promise<SyncResult> {
     }
   }
 
-  // 3. Build date range: last 3 days
+  // 3. Build date range: last 28 days (GSC data has ~3 day delay)
   const endDate = new Date()
+  endDate.setDate(endDate.getDate() - 3) // GSC data is delayed ~3 days
   const startDate = new Date()
-  startDate.setDate(startDate.getDate() - 3)
+  startDate.setDate(startDate.getDate() - 28)
 
   const formatDate = (d: Date): string => d.toISOString().split('T')[0]
 

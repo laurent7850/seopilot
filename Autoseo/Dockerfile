@@ -19,7 +19,9 @@ RUN npm run build
 
 # Production
 FROM base AS runner
-RUN apk add --no-cache openssl
+RUN apk add --no-cache openssl chromium nss freetype harfbuzz ca-certificates ttf-freefont
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV CHROMIUM_PATH=/usr/bin/chromium-browser
 WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
@@ -36,11 +38,7 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 # Copy worker sources for the worker container
 COPY --from=builder /app/src/workers ./src/workers
 COPY --from=builder /app/src/services ./src/services
-COPY --from=builder /app/src/lib/redis.ts ./src/lib/redis.ts
-COPY --from=builder /app/src/lib/queue.ts ./src/lib/queue.ts
-COPY --from=builder /app/src/lib/scheduler.ts ./src/lib/scheduler.ts
-COPY --from=builder /app/src/lib/prisma.ts ./src/lib/prisma.ts
-COPY --from=builder /app/src/lib/openai.ts ./src/lib/openai.ts
+COPY --from=builder /app/src/lib ./src/lib
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 
 USER nextjs

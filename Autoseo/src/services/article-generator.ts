@@ -1,5 +1,5 @@
-import { getOpenAI } from '@/lib/openai'
-import { slugify } from '@/lib/utils'
+import { chatCompletion } from '../lib/llm-provider'
+import { slugify } from '../lib/utils'
 
 export interface GenerateArticleParams {
   keyword: string
@@ -56,24 +56,13 @@ Important:
 - content must be valid HTML (no <html>, <head>, or <body> tags, just the article body)
 - Do NOT wrap the content in \`\`\`html code blocks`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      {
-        role: 'user',
-        content: `Generate an SEO-optimized article about "${keyword}" for the "${niche}" niche. The article should be approximately ${wordCount} words in ${language}.`,
-      },
-    ],
-    response_format: { type: 'json_object' },
+  const content = await chatCompletion({
+    systemPrompt,
+    userPrompt: `Generate an SEO-optimized article about "${keyword}" for the "${niche}" niche. The article should be approximately ${wordCount} words in ${language}.`,
+    jsonMode: true,
     temperature: 0.7,
-    max_tokens: 4096,
+    maxTokens: 4096,
   })
-
-  const content = response.choices[0]?.message?.content
-  if (!content) {
-    throw new Error('No content returned from OpenAI')
-  }
 
   const parsed = JSON.parse(content) as GeneratedArticle
 

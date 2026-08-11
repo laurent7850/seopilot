@@ -122,6 +122,54 @@ const features = [
     lightColor: 'bg-cyan-50',
     iconColor: 'text-cyan-600',
   },
+  {
+    icon: Zap,
+    title: 'Score de contenu NLP intelligent',
+    subtitle: 'Optimisez chaque article comme un pro du SEO',
+    description:
+      "Analysez vos articles avec notre algorithme NLP qui compare votre contenu aux resultats SERP existants. Obtenez un score de 0 a 100, decouvrez les termes semantiques manquants et recevez des suggestions d'amelioration concretes pour surpasser la concurrence.",
+    highlights: [
+      'Score NLP/SERP de 0 a 100',
+      'Detection des termes semantiques manquants',
+      'Comparaison avec les resultats top 10 Google',
+      'Suggestions d\'amelioration en temps reel',
+    ],
+    color: 'bg-amber-500',
+    lightColor: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+  },
+  {
+    icon: Shield,
+    title: 'GEO & AI Visibility',
+    subtitle: 'Preparez votre site pour les moteurs de recherche IA',
+    description:
+      "En 2026, 58% des recherches finissent sans clic et les AI Overviews changent les regles du jeu. Notre tracker GEO analyse la pret de votre contenu pour etre cite par ChatGPT, Perplexity et Google Gemini. Optimisez vos donnees structurees, votre format de contenu et votre citabilite.",
+    highlights: [
+      'Score AI Visibility (0-100)',
+      'Analyse citabilite pour ChatGPT, Perplexity, Gemini',
+      'Recommandations donnees structurees (FAQ, HowTo)',
+      'Optimisation format contenu pour les LLMs',
+    ],
+    color: 'bg-indigo-500',
+    lightColor: 'bg-indigo-50',
+    iconColor: 'text-indigo-600',
+  },
+  {
+    icon: Rocket,
+    title: 'Automatisation & alertes intelligentes',
+    subtitle: 'Votre SEO tourne pendant que vous dormez',
+    description:
+      "Crawl hebdomadaire automatique, rapports par email chaque lundi, alertes en temps reel sur les chutes de positions et les backlinks perdus. Integrez n8n pour creer des workflows personnalises. Support multi-LLM : choisissez entre OpenAI, Claude, Mistral ou Gemini.",
+    highlights: [
+      'Crawl automatique hebdomadaire avec detection de regressions',
+      'Rapport SEO par email chaque lundi',
+      'Alertes positions, backlinks et erreurs crawl',
+      'Support multi-LLM (GPT-4o, Claude, Mistral, Gemini)',
+    ],
+    color: 'bg-rose-500',
+    lightColor: 'bg-rose-50',
+    iconColor: 'text-rose-600',
+  },
 ]
 
 export default function FeaturesPage() {

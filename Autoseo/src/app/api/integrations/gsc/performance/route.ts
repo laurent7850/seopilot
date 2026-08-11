@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { fetchSearchPerformance, refreshAccessToken } from '@/services/google-search-console'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/integrations/gsc/performance?siteId=xxx&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&dimensions=query,page
  * Fetch search performance data from Google Search Console.

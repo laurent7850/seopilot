@@ -29,17 +29,18 @@ export async function GET(request: NextRequest) {
 
     const pdfBuffer = await generateSiteReport(siteId, session.user.id)
 
-    // Sanitize site name for the filename
+    // Sanitize site name for the filename and add date
     const safeName = site.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
+    const dateStr = new Date().toISOString().slice(0, 10)
 
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="rapport-seo-${safeName}.pdf"`,
+        'Content-Disposition': `attachment; filename="rapport-seo-${safeName}-${dateStr}.pdf"`,
         'Content-Length': pdfBuffer.length.toString(),
       },
     })

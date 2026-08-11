@@ -5,11 +5,14 @@ const BASE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [
     '',
-    '/login',
-    '/register',
     '/blog',
     '/contact',
     '/pricing',
+    '/features',
+    '/privacy',
+    '/terms',
+    '/cgv',
+    '/mentions-legales',
   ]
 
   return staticPages.map((path) => ({

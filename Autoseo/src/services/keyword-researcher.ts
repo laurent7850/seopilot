@@ -1,4 +1,4 @@
-import { getOpenAI } from '@/lib/openai'
+import { chatCompletion } from '../lib/llm-provider'
 
 export interface ResearchKeywordsParams {
   niche: string
@@ -55,24 +55,13 @@ Respond with valid JSON in this format:
   ]
 }`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      {
-        role: 'user',
-        content: `Generate ${count} keyword suggestions for the "${niche}" niche based on these seed keywords: ${seedKeywords.join(', ')}. Respond in ${language}.`,
-      },
-    ],
-    response_format: { type: 'json_object' },
+  const content = await chatCompletion({
+    systemPrompt,
+    userPrompt: `Generate ${count} keyword suggestions for the "${niche}" niche based on these seed keywords: ${seedKeywords.join(', ')}. Respond in ${language}.`,
+    jsonMode: true,
     temperature: 0.8,
-    max_tokens: 4096,
+    maxTokens: 4096,
   })
-
-  const content = response.choices[0]?.message?.content
-  if (!content) {
-    throw new Error('No content returned from OpenAI')
-  }
 
   const parsed = JSON.parse(content) as { keywords: KeywordSuggestion[] }
 

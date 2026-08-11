@@ -1,4 +1,4 @@
-import { getOpenAI } from '@/lib/openai'
+import { chatCompletion } from '../lib/llm-provider'
 
 export interface SuggestBacklinksParams {
   siteUrl: string
@@ -51,24 +51,13 @@ Respond in valid JSON:
 Provide 10-15 diverse suggestions covering different strategies and target types.
 Focus on realistic, white-hat approaches that can build sustainable authority.`
 
-  const response = await getOpenAI().chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: systemPrompt },
-      {
-        role: 'user',
-        content: `Suggest backlink building opportunities for "${siteUrl}" in the "${niche}" niche.`,
-      },
-    ],
-    response_format: { type: 'json_object' },
+  const content = await chatCompletion({
+    systemPrompt,
+    userPrompt: `Suggest backlink building opportunities for "${siteUrl}" in the "${niche}" niche.`,
+    jsonMode: true,
     temperature: 0.7,
-    max_tokens: 4096,
+    maxTokens: 4096,
   })
-
-  const content = response.choices[0]?.message?.content
-  if (!content) {
-    throw new Error('No content returned from OpenAI')
-  }
 
   const parsed = JSON.parse(content) as { suggestions: BacklinkSuggestion[] }
 

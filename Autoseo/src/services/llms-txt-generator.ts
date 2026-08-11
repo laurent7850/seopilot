@@ -1,5 +1,5 @@
-import { getOpenAI } from '@/lib/openai'
-import { prisma } from '@/lib/prisma'
+import { chatCompletion } from '../lib/llm-provider'
+import { prisma } from '../lib/prisma'
 
 export async function generateLlmsTxt(siteId: string, userId: string): Promise<string> {
   // Load the site
@@ -35,9 +35,7 @@ export async function generateLlmsTxt(siteId: string, userId: string): Promise<s
     })
     .join('\n')
 
-  const openai = getOpenAI()
-
-  const prompt = `Tu es un expert en SEO et en optimisation pour les LLMs (Large Language Models).
+  const userPrompt = `Tu es un expert en SEO et en optimisation pour les LLMs (Large Language Models).
 
 Genere un fichier llms.txt au format Markdown en suivant strictement la specification de llmstxt.org.
 
@@ -67,27 +65,12 @@ Regles importantes :
 - N'invente PAS d'URLs : utilise uniquement les URLs fournies ci-dessus
 - Si aucun article n'est disponible, cree une structure de base avec les pages principales du site (accueil, contact, etc.)`
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'system',
-        content: 'Tu generes des fichiers llms.txt au format Markdown suivant la specification llmstxt.org. Reponds uniquement avec le contenu du fichier, sans bloc de code ni explication.',
-      },
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ],
+  const content = await chatCompletion({
+    systemPrompt: 'Tu generes des fichiers llms.txt au format Markdown suivant la specification llmstxt.org. Reponds uniquement avec le contenu du fichier, sans bloc de code ni explication.',
+    userPrompt,
     temperature: 0.7,
-    max_tokens: 2000,
+    maxTokens: 2000,
   })
-
-  const content = response.choices[0]?.message?.content
-
-  if (!content) {
-    throw new Error('Impossible de generer le fichier llms.txt')
-  }
 
   return content.trim()
 }

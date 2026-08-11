@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/email'
+import { authRateLimit } from '@/lib/rate-limit'
 import crypto from 'crypto'
 
 const APP_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000'
@@ -43,6 +44,10 @@ function passwordResetEmail(resetUrl: string) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: max 10 requests per minute
+    const rateLimitResponse = authRateLimit(request)
+    if (rateLimitResponse) return rateLimitResponse
+
     const body = await request.json()
     const { email } = body
 

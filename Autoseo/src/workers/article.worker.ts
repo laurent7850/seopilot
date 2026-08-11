@@ -105,8 +105,13 @@ async function processArticleJob(job: Job<ArticleJobData>) {
             slug: generated.slug,
             metaTitle: generated.metaTitle,
             metaDescription: generated.metaDescription,
+            seo_title: generated.metaTitle,
+            seo_description: generated.metaDescription,
             wordCount: generated.wordCount,
             featuredImage,
+            status: 'published',
+            language: site.language || 'fr',
+            author_name: 'SEOPilot',
           },
         })
         if (result.success) {

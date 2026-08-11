@@ -40,7 +40,7 @@ export interface TechnicalAuditResult {
   auditedAt: string
 }
 
-async function fetchPage(url: string): Promise<{ html: string; statusCode: number; headers: Record<string, string> }> {
+async function fetchPageStatic(url: string): Promise<{ html: string; statusCode: number; headers: Record<string, string> }> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000)
   try {
@@ -56,6 +56,73 @@ async function fetchPage(url: string): Promise<{ html: string; statusCode: numbe
   } finally {
     clearTimeout(timeout)
   }
+}
+
+/** Render the page with Puppeteer (headless Chrome) to get the full DOM after JS execution */
+async function fetchPageRendered(url: string): Promise<{ html: string; statusCode: number; headers: Record<string, string> }> {
+  const puppeteer = (await import('puppeteer-core')).default
+
+  const possiblePaths = [
+    '/usr/bin/chromium-browser',  // Alpine Docker
+    '/usr/bin/chromium',          // Debian Docker
+    '/usr/bin/google-chrome',     // Google Chrome
+  ]
+  let executablePath: string | undefined
+  const fs = await import('fs')
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) { executablePath = p; break }
+  }
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+  })
+
+  try {
+    const page = await browser.newPage()
+    await page.setUserAgent('SEOPilot-Auditor/1.0')
+
+    const response = await page.goto(url, { waitUntil: 'networkidle2', timeout: 20000 })
+    // Extra wait for React/Vue hydration
+    await new Promise(r => setTimeout(r, 2000))
+
+    const html = await page.content()
+    const statusCode = response?.status() ?? 200
+    const responseHeaders = response?.headers() || {}
+
+    await page.close()
+    return { html, statusCode, headers: responseHeaders }
+  } finally {
+    await browser.close()
+  }
+}
+
+/** Smart fetch: try static first, detect SPA, re-fetch with Puppeteer if needed */
+async function fetchPage(url: string): Promise<{ html: string; statusCode: number; headers: Record<string, string>; usedPuppeteer: boolean }> {
+  // First: static fetch
+  const staticResult = await fetchPageStatic(url)
+  const $static = (await import('cheerio')).load(staticResult.html)
+
+  // Detect SPA: presence of React/Vue/Next root + very few visible elements
+  const isSPA = $static('div#root, div#app, div#__next, div[data-reactroot]').length > 0
+  const bodyText = $static('body').text().replace(/\s+/g, ' ').trim()
+  const wordCount = bodyText.split(/\s+/).filter(w => w.length > 0).length
+  const imgCount = $static('img').length
+  const linkCount = $static('a[href]').length
+
+  if (isSPA && (wordCount < 150 || imgCount === 0 || linkCount < 3)) {
+    console.log(`[Auditor] SPA detected (${wordCount} words, ${imgCount} imgs, ${linkCount} links) — rendering with Puppeteer`)
+    try {
+      const rendered = await fetchPageRendered(url)
+      return { ...rendered, usedPuppeteer: true }
+    } catch (err: any) {
+      console.error('[Auditor] Puppeteer rendering failed, using static HTML:', err.message)
+      return { ...staticResult, usedPuppeteer: false }
+    }
+  }
+
+  return { ...staticResult, usedPuppeteer: false }
 }
 
 async function checkSSL(hostname: string): Promise<AuditCheck> {
@@ -484,12 +551,25 @@ function checkJsonLd($: cheerio.CheerioAPI): AuditCheck {
 
 function checkImageAlts($: cheerio.CheerioAPI): AuditCheck {
   const images = $('img')
+  // Detect SPA — if body has React/Vue root or very few visible elements
+  const isSPA = $('div#root, div#app, div#__next, div[data-reactroot]').length > 0
   if (images.length === 0) {
+    if (isSPA) {
+      return {
+        name: 'Attributs alt des images',
+        category: 'content',
+        status: 'warning',
+        message: 'Aucune image detectee dans le HTML statique (site SPA)',
+        details: 'Ce site utilise un framework JS (React/Vue/etc.). Les images sont chargees dynamiquement et ne sont pas visibles dans le HTML initial. Utilisez le crawl multi-pages avec rendering JS pour une analyse complete.',
+        points: 3,
+        maxPoints: 5,
+      }
+    }
     return {
       name: 'Attributs alt des images',
       category: 'content',
       status: 'pass',
-      message: 'Aucune image trouvee',
+      message: 'Aucune image trouvee dans le HTML',
       points: 5,
       maxPoints: 5,
     }
@@ -663,11 +743,16 @@ export async function runTechnicalAudit(siteUrl: string): Promise<TechnicalAudit
   const hostname = parsedUrl.hostname
   const baseUrl = `${parsedUrl.protocol}//${parsedUrl.host}`
 
-  // Fetch the homepage
+  // Fetch the homepage (with automatic SPA detection + Puppeteer fallback)
   let $: cheerio.CheerioAPI
+  let usedPuppeteer = false
   try {
-    const { html } = await fetchPage(url)
-    $ = cheerio.load(html)
+    const result = await fetchPage(url)
+    $ = cheerio.load(result.html)
+    usedPuppeteer = result.usedPuppeteer
+    if (usedPuppeteer) {
+      console.log(`[Auditor] Page rendered with Puppeteer — full DOM available`)
+    }
   } catch (err: any) {
     // If we can't even fetch the page, return a minimal audit
     return {
@@ -703,7 +788,17 @@ export async function runTechnicalAudit(siteUrl: string): Promise<TechnicalAudit
   const jsonLd = checkJsonLd($)
   const imageAlts = checkImageAlts($)
 
-  const allChecks = [ssl, robots, sitemap, viewport, canonical, metaTitle, metaDesc, h1, headings, imageAlts, ogTags, jsonLd, llmsTxt, pageSpeed.check]
+  // SPA rendering info — if Puppeteer was used, note it as a positive
+  const spaCheck: AuditCheck | null = usedPuppeteer ? {
+    name: 'Rendu SPA',
+    category: 'technical',
+    status: 'pass',
+    message: 'Site SPA detecte et rendu avec Puppeteer (DOM complet analyse)',
+    points: 5,
+    maxPoints: 5,
+  } : null
+
+  const allChecks = [ssl, robots, sitemap, viewport, canonical, metaTitle, metaDesc, h1, headings, imageAlts, ogTags, jsonLd, llmsTxt, pageSpeed.check, ...(spaCheck ? [spaCheck] : [])]
 
   // Group by category
   const grouped: Record<string, AuditCheck[]> = { technical: [], content: [], performance: [], structured: [] }
@@ -726,7 +821,21 @@ export async function runTechnicalAudit(siteUrl: string): Promise<TechnicalAudit
 
   const totalPoints = allChecks.reduce((s, c) => s + c.points, 0)
   const totalMax = allChecks.reduce((s, c) => s + c.maxPoints, 0)
-  const overallScore = totalMax > 0 ? Math.round((totalPoints / totalMax) * 100) : 0
+  let overallScore = totalMax > 0 ? Math.round((totalPoints / totalMax) * 100) : 0
+
+  // Apply CWV penalties — a site with poor Core Web Vitals should NOT score 100
+  if (pageSpeed.vitals) {
+    const v = pageSpeed.vitals
+    // LCP > 4s = severe penalty, > 2.5s = moderate
+    if (v.lcp && v.lcp > 4000) overallScore = Math.min(overallScore, 60)
+    else if (v.lcp && v.lcp > 2500) overallScore = Math.min(overallScore, 80)
+    // CLS > 0.25 = severe, > 0.1 = moderate
+    if (v.cls && v.cls > 0.25) overallScore = Math.min(overallScore, 65)
+    else if (v.cls && v.cls > 0.1) overallScore = Math.min(overallScore, 85)
+    // Performance score < 50 caps overall at 55
+    if (v.performanceScore && v.performanceScore < 50) overallScore = Math.min(overallScore, 55)
+    else if (v.performanceScore && v.performanceScore < 80) overallScore = Math.min(overallScore, 75)
+  }
 
   return {
     overallScore,

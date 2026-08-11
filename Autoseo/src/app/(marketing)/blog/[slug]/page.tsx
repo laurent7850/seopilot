@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import DOMPurify from 'isomorphic-dompurify'
 import { Navbar } from '@/components/marketing/Navbar'
 import { Footer } from '@/components/marketing/Footer'
 import { prisma } from '@/lib/prisma'
@@ -117,7 +118,7 @@ export default async function BlogArticlePage({
           <div className="border-t border-gray-100 pt-8">
             <div
               className="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-brand-600 prose-strong:text-gray-900"
-              dangerouslySetInnerHTML={{ __html: article.content || '' }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content || '') }}
             />
           </div>
         </article>

@@ -6,6 +6,7 @@ let _keywordQueue: Queue | null = null
 let _publishQueue: Queue | null = null
 let _analyticsQueue: Queue | null = null
 let _crawlQueue: Queue | null = null
+let _emailQueue: Queue | null = null
 
 export function getArticleQueue(): Queue {
   if (!_articleQueue) {
@@ -40,4 +41,11 @@ export function getCrawlQueue(): Queue {
     _crawlQueue = new Queue('site-crawl', { connection: getRedis() })
   }
   return _crawlQueue
+}
+
+export function getEmailQueue(): Queue {
+  if (!_emailQueue) {
+    _emailQueue = new Queue('email-notifications', { connection: getRedis() })
+  }
+  return _emailQueue
 }

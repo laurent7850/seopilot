@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { createHash } from 'crypto'
+import puppeteer, { Browser } from 'puppeteer-core'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -90,9 +91,29 @@ function isPageUrl(url: string): boolean {
 }
 
 function hashContent(text: string): string {
-  // Use first 5000 chars of visible text to detect duplicates
-  const normalized = text.replace(/\s+/g, ' ').trim().substring(0, 5000)
+  const normalized = text.replace(/\s+/g, ' ').trim()
   return createHash('md5').update(normalized).digest('hex')
+}
+
+function extractMainContent($: cheerio.CheerioAPI): string {
+  // Try main content selectors first to avoid false positives from shared nav/sidebar
+  const mainSelectors = [
+    'main', 'article', '[role="main"]', '#content', '.content',
+    '#main', '.main-content', '.page-content', '.entry-content',
+  ]
+  for (const selector of mainSelectors) {
+    const el = $(selector).first()
+    if (el.length) {
+      const clone = el.clone()
+      clone.find('script, style, nav, footer, header, aside, .sidebar, .widget').remove()
+      const text = clone.text().replace(/\s+/g, ' ').trim()
+      if (text.length > 100) return text
+    }
+  }
+  // Fallback: body with aggressive stripping
+  const bodyClone = $('body').clone()
+  bodyClone.find('script, style, nav, footer, header, aside, .sidebar, .widget, .menu, .nav, .breadcrumb, .social, .share, .cookie, .popup, .modal').remove()
+  return bodyClone.text().replace(/\s+/g, ' ').trim()
 }
 
 async function fetchWithTimeout(url: string, timeoutMs = 15000): Promise<{ html: string; statusCode: number; loadTimeMs: number }> {
@@ -109,6 +130,75 @@ async function fetchWithTimeout(url: string, timeoutMs = 15000): Promise<{ html:
     return { html, statusCode: res.status, loadTimeMs: Date.now() - start }
   } finally {
     clearTimeout(timeout)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Puppeteer helpers
+// ---------------------------------------------------------------------------
+
+async function launchBrowser(): Promise<Browser> {
+  const possiblePaths = [
+    '/usr/bin/chromium-browser',  // Alpine Docker
+    '/usr/bin/chromium',          // Debian Docker
+    '/usr/bin/google-chrome',     // Google Chrome
+  ]
+
+  let executablePath: string | undefined
+
+  for (const p of possiblePaths) {
+    try {
+      const fs = await import('fs')
+      if (fs.existsSync(p)) {
+        executablePath = p
+        break
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Fallback: try puppeteer's own path (may not work with puppeteer-core, but try anyway)
+  if (!executablePath) {
+    try {
+      executablePath = (puppeteer as any).executablePath?.()
+    } catch {
+      // ignore
+    }
+  }
+
+  const launchOptions: any = {
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+  }
+
+  if (executablePath) {
+    launchOptions.executablePath = executablePath
+  }
+
+  return puppeteer.launch(launchOptions)
+}
+
+async function fetchWithPuppeteer(
+  browser: Browser,
+  url: string,
+  timeoutMs = 15000,
+): Promise<{ html: string; statusCode: number; loadTimeMs: number }> {
+  const page = await browser.newPage()
+  try {
+    await page.setUserAgent(USER_AGENT)
+    const start = Date.now()
+    const response = await page.goto(url, {
+      waitUntil: 'networkidle2',
+      timeout: timeoutMs,
+    })
+    // Wait an additional 1 second for any remaining JS rendering
+    await new Promise(r => setTimeout(r, 1000))
+    const html = await page.content()
+    const statusCode = response?.status() ?? 0
+    return { html, statusCode, loadTimeMs: Date.now() - start }
+  } finally {
+    await page.close()
   }
 }
 
@@ -155,7 +245,7 @@ function analyzePage(url: string, html: string, statusCode: number, loadTimeMs: 
   // --- Content ---
   // Remove scripts, styles, nav, footer for word count
   const bodyClone = $.root().clone()
-  bodyClone.find('script, style, nav, footer, header, noscript').remove()
+  bodyClone.find('script, style, nav, footer, header').remove()
   const visibleText = bodyClone.text().replace(/\s+/g, ' ').trim()
   const wordCount = visibleText ? visibleText.split(/\s+/).length : 0
 
@@ -163,7 +253,9 @@ function analyzePage(url: string, html: string, statusCode: number, loadTimeMs: 
     issues.push({ type: 'warning', category: 'content', message: `Contenu leger (${wordCount} mots)`, details: 'Minimum recommande: 300 mots pour les pages de contenu' })
   }
 
-  const contentHash = visibleText ? hashContent(visibleText) : null
+  // Use main content area for duplicate detection (avoids false positives from shared elements)
+  const mainContent = extractMainContent($)
+  const contentHash = mainContent.length > 50 ? hashContent(mainContent) : null
 
   // --- Images ---
   const images = $('img')
@@ -311,7 +403,7 @@ export function calculateCrawlScore(pages: CrawlPageData[]): number {
 }
 
 // ---------------------------------------------------------------------------
-// Main Crawler (BFS)
+// Main Crawler (BFS) with SPA auto-detection
 // ---------------------------------------------------------------------------
 
 export async function crawlSite(
@@ -331,79 +423,318 @@ export async function crawlSite(
   const visited = new Set<string>()
   const results: CrawlPageData[] = []
 
-  // Concurrency limiter (crawl 3 pages at a time)
-  const CONCURRENCY = 3
+  // Concurrency limiter
+  const CONCURRENCY_STATIC = 3
+  const CONCURRENCY_PUPPETEER = 2
   const DELAY_MS = 200 // politeness delay
 
-  while (queue.length > 0 && results.length < maxPages) {
-    // Take a batch
-    const batch = queue.splice(0, Math.min(CONCURRENCY, maxPages - results.length))
-    const tasks = batch
-      .filter(([url]) => {
-        if (visited.has(url)) return false
-        visited.add(url)
-        return true
-      })
-      .map(async ([url, depth]) => {
-        try {
-          const { html, statusCode, loadTimeMs } = await fetchWithTimeout(url)
-          const pageData = analyzePage(url, html, statusCode, loadTimeMs, depth, baseDomain)
+  let usePuppeteer = false
+  let browser: Browser | null = null
 
-          // Add discovered URLs to queue (limit depth to 3)
-          if (depth < 3) {
-            for (const discoveredUrl of pageData.discoveredUrls) {
-              if (!visited.has(discoveredUrl) && isSameDomain(discoveredUrl, baseDomain)) {
-                queue.push([discoveredUrl, depth + 1])
-              }
+  try {
+    // -----------------------------------------------------------------------
+    // Phase 1: Crawl homepage with simple fetch
+    // -----------------------------------------------------------------------
+    const firstEntry = queue.shift()!
+    const [firstUrl, firstDepth] = firstEntry
+    visited.add(firstUrl)
+
+    let firstPageData: CrawlPageData
+    try {
+      const { html, statusCode, loadTimeMs } = await fetchWithTimeout(firstUrl)
+      firstPageData = analyzePage(firstUrl, html, statusCode, loadTimeMs, firstDepth, baseDomain)
+    } catch (err: any) {
+      firstPageData = {
+        url: firstUrl,
+        statusCode: null,
+        title: null,
+        metaDescription: null,
+        h1: null,
+        h1Count: 0,
+        h2Count: 0,
+        wordCount: 0,
+        imagesTotal: 0,
+        imagesWithAlt: 0,
+        internalLinks: 0,
+        externalLinks: 0,
+        hasCanonical: false,
+        canonicalUrl: null,
+        hasOgTags: false,
+        hasJsonLd: false,
+        loadTimeMs: null,
+        contentHash: null,
+        issues: [{ type: 'error' as const, category: 'structure' as const, message: `Impossible d'acceder a la page: ${err.message}` }],
+        depth: firstDepth,
+        discoveredUrls: [],
+      }
+    }
+
+    // Enqueue discovered URLs from homepage
+    if (firstDepth < 3) {
+      for (const discoveredUrl of firstPageData.discoveredUrls) {
+        if (!visited.has(discoveredUrl) && isSameDomain(discoveredUrl, baseDomain)) {
+          queue.push([discoveredUrl, firstDepth + 1])
+        }
+      }
+    }
+
+    results.push(firstPageData)
+
+    // -----------------------------------------------------------------------
+    // Phase 1b: SPA fallback — if homepage has 0 internal links, use sitemap
+    // -----------------------------------------------------------------------
+    if (firstPageData.discoveredUrls.length === 0 || (firstPageData.wordCount < 100 && firstPageData.internalLinks === 0)) {
+      console.log('[Crawler] Homepage has 0 links/low content — trying sitemap.xml for URL discovery')
+      try {
+        const Sitemapper = (await import('sitemapper')).default
+        const sitemapUrl = new URL('/sitemap.xml', origin).toString()
+        const sitemap = new Sitemapper({ url: sitemapUrl, timeout: 10000 })
+        const { sites: sitemapUrls } = await sitemap.fetch()
+        let addedFromSitemap = 0
+        for (const smUrl of sitemapUrls) {
+          const normalized = normalizeUrl(smUrl, origin)
+          if (normalized && !visited.has(normalized) && isSameDomain(normalized, baseDomain) && isPageUrl(normalized)) {
+            queue.push([normalized, 1])
+            addedFromSitemap++
+          }
+        }
+        if (addedFromSitemap > 0) {
+          console.log(`[Crawler] Added ${addedFromSitemap} URLs from sitemap.xml`)
+          // SPA detected from 0 links — switch to Puppeteer
+          if (firstPageData.wordCount < 100) {
+            console.log('[Crawler] Low word count + 0 links = SPA — switching to Puppeteer')
+            usePuppeteer = true
+            try {
+              browser = await launchBrowser()
+              console.log('[Crawler] Puppeteer launched for SPA rendering')
+              // Re-crawl homepage with Puppeteer
+              const { html: reHtml, statusCode: reSc, loadTimeMs: reLt } = await fetchWithPuppeteer(browser, firstPageData.url)
+              results[0] = analyzePage(firstPageData.url, reHtml, reSc, reLt, 0, baseDomain)
+            } catch (err: any) {
+              console.log('[Crawler] Puppeteer launch failed, continuing with static fetch:', err.message)
+              usePuppeteer = false
             }
           }
-
-          return pageData
-        } catch (err: any) {
-          // Page fetch failed - still record it
-          return {
-            url,
-            statusCode: null,
-            title: null,
-            metaDescription: null,
-            h1: null,
-            h1Count: 0,
-            h2Count: 0,
-            wordCount: 0,
-            imagesTotal: 0,
-            imagesWithAlt: 0,
-            internalLinks: 0,
-            externalLinks: 0,
-            hasCanonical: false,
-            canonicalUrl: null,
-            hasOgTags: false,
-            hasJsonLd: false,
-            loadTimeMs: null,
-            contentHash: null,
-            issues: [{ type: 'error' as const, category: 'structure' as const, message: `Impossible d'acceder a la page: ${err.message}` }],
-            depth,
-            discoveredUrls: [],
-          } satisfies CrawlPageData
         }
-      })
-
-    const batchResults = await Promise.all(tasks)
-    results.push(...batchResults)
-
-    // Report progress
-    if (onProgress) {
-      onProgress({
-        pagesFound: visited.size + queue.length,
-        pagesCrawled: results.length,
-        maxPages,
-      })
+      } catch (err: any) {
+        console.log('[Crawler] Sitemap fetch failed:', err.message)
+      }
     }
 
-    // Politeness delay between batches
-    if (queue.length > 0) {
-      await new Promise(r => setTimeout(r, DELAY_MS))
+    if (onProgress) {
+      onProgress({ pagesFound: visited.size + queue.length, pagesCrawled: results.length, maxPages })
+    }
+
+    // -----------------------------------------------------------------------
+    // Phase 2: Crawl the first discovered internal URL with simple fetch
+    // -----------------------------------------------------------------------
+    let secondPageData: CrawlPageData | null = null
+
+    if (queue.length > 0 && results.length < maxPages) {
+      const secondEntry = queue.shift()!
+      const [secondUrl, secondDepth] = secondEntry
+      visited.add(secondUrl)
+
+      try {
+        const { html, statusCode, loadTimeMs } = await fetchWithTimeout(secondUrl)
+        secondPageData = analyzePage(secondUrl, html, statusCode, loadTimeMs, secondDepth, baseDomain)
+      } catch (err: any) {
+        secondPageData = {
+          url: secondUrl,
+          statusCode: null,
+          title: null,
+          metaDescription: null,
+          h1: null,
+          h1Count: 0,
+          h2Count: 0,
+          wordCount: 0,
+          imagesTotal: 0,
+          imagesWithAlt: 0,
+          internalLinks: 0,
+          externalLinks: 0,
+          hasCanonical: false,
+          canonicalUrl: null,
+          hasOgTags: false,
+          hasJsonLd: false,
+          loadTimeMs: null,
+          contentHash: null,
+          issues: [{ type: 'error' as const, category: 'structure' as const, message: `Impossible d'acceder a la page: ${err.message}` }],
+          depth: secondDepth,
+          discoveredUrls: [],
+        }
+      }
+
+      // Enqueue discovered URLs from second page
+      if (secondDepth < 3) {
+        for (const discoveredUrl of secondPageData.discoveredUrls) {
+          if (!visited.has(discoveredUrl) && isSameDomain(discoveredUrl, baseDomain)) {
+            queue.push([discoveredUrl, secondDepth + 1])
+          }
+        }
+      }
+
+      results.push(secondPageData)
+
+      if (onProgress) {
+        onProgress({ pagesFound: visited.size + queue.length, pagesCrawled: results.length, maxPages })
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Phase 3: SPA detection
+    // -----------------------------------------------------------------------
+    if (
+      secondPageData &&
+      firstPageData.contentHash !== null &&
+      secondPageData.contentHash !== null &&
+      firstPageData.contentHash === secondPageData.contentHash &&
+      firstPageData.title === secondPageData.title
+    ) {
+      // SPA detected \u2014 switch to Puppeteer
+      console.log('[Crawler] SPA detected \u2014 switching to Puppeteer rendering')
+      usePuppeteer = true
+      browser = await launchBrowser()
+      console.log('[Crawler] Using Puppeteer for JS rendering')
+
+      // Re-crawl the first two pages with Puppeteer
+      try {
+        const { html: html1, statusCode: sc1, loadTimeMs: lt1 } = await fetchWithPuppeteer(browser, firstPageData.url)
+        const reCrawled1 = analyzePage(firstPageData.url, html1, sc1, lt1, firstPageData.depth, baseDomain)
+        // Replace the first result
+        results[0] = reCrawled1
+        // Re-enqueue any new discovered URLs from re-crawled page
+        if (reCrawled1.depth < 3) {
+          for (const discoveredUrl of reCrawled1.discoveredUrls) {
+            if (!visited.has(discoveredUrl) && isSameDomain(discoveredUrl, baseDomain)) {
+              queue.push([discoveredUrl, reCrawled1.depth + 1])
+            }
+          }
+        }
+      } catch {
+        // Keep the original first page data if re-crawl fails
+      }
+
+      try {
+        const { html: html2, statusCode: sc2, loadTimeMs: lt2 } = await fetchWithPuppeteer(browser, secondPageData.url)
+        const reCrawled2 = analyzePage(secondPageData.url, html2, sc2, lt2, secondPageData.depth, baseDomain)
+        // Replace the second result
+        results[1] = reCrawled2
+        // Re-enqueue any new discovered URLs from re-crawled page
+        if (reCrawled2.depth < 3) {
+          for (const discoveredUrl of reCrawled2.discoveredUrls) {
+            if (!visited.has(discoveredUrl) && isSameDomain(discoveredUrl, baseDomain)) {
+              queue.push([discoveredUrl, reCrawled2.depth + 1])
+            }
+          }
+        }
+      } catch {
+        // Keep the original second page data if re-crawl fails
+      }
+
+      if (onProgress) {
+        onProgress({ pagesFound: visited.size + queue.length, pagesCrawled: results.length, maxPages })
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // Phase 4: BFS loop for remaining pages
+    // -----------------------------------------------------------------------
+    const CONCURRENCY = usePuppeteer ? CONCURRENCY_PUPPETEER : CONCURRENCY_STATIC
+
+    while (queue.length > 0 && results.length < maxPages) {
+      // Take a batch
+      const batch = queue.splice(0, Math.min(CONCURRENCY, maxPages - results.length))
+      const tasks = batch
+        .filter(([url]) => {
+          if (visited.has(url)) return false
+          visited.add(url)
+          return true
+        })
+        .map(async ([url, depth]) => {
+          try {
+            let html: string
+            let statusCode: number
+            let loadTimeMs: number
+
+            if (usePuppeteer && browser) {
+              const result = await fetchWithPuppeteer(browser, url)
+              html = result.html
+              statusCode = result.statusCode
+              loadTimeMs = result.loadTimeMs
+            } else {
+              const result = await fetchWithTimeout(url)
+              html = result.html
+              statusCode = result.statusCode
+              loadTimeMs = result.loadTimeMs
+            }
+
+            const pageData = analyzePage(url, html, statusCode, loadTimeMs, depth, baseDomain)
+
+            // Add discovered URLs to queue (limit depth to 3)
+            if (depth < 3) {
+              for (const discoveredUrl of pageData.discoveredUrls) {
+                if (!visited.has(discoveredUrl) && isSameDomain(discoveredUrl, baseDomain)) {
+                  queue.push([discoveredUrl, depth + 1])
+                }
+              }
+            }
+
+            return pageData
+          } catch (err: any) {
+            // Page fetch failed - still record it
+            return {
+              url,
+              statusCode: null,
+              title: null,
+              metaDescription: null,
+              h1: null,
+              h1Count: 0,
+              h2Count: 0,
+              wordCount: 0,
+              imagesTotal: 0,
+              imagesWithAlt: 0,
+              internalLinks: 0,
+              externalLinks: 0,
+              hasCanonical: false,
+              canonicalUrl: null,
+              hasOgTags: false,
+              hasJsonLd: false,
+              loadTimeMs: null,
+              contentHash: null,
+              issues: [{ type: 'error' as const, category: 'structure' as const, message: `Impossible d'acceder a la page: ${err.message}` }],
+              depth,
+              discoveredUrls: [],
+            } satisfies CrawlPageData
+          }
+        })
+
+      const batchResults = await Promise.all(tasks)
+      results.push(...batchResults)
+
+      // Report progress
+      if (onProgress) {
+        onProgress({
+          pagesFound: visited.size + queue.length,
+          pagesCrawled: results.length,
+          maxPages,
+        })
+      }
+
+      // Politeness delay between batches
+      if (queue.length > 0) {
+        await new Promise(r => setTimeout(r, DELAY_MS))
+      }
+    }
+
+    return results
+  } finally {
+    // Always close the browser if it was opened
+    if (browser) {
+      try {
+        await browser.close()
+      } catch {
+        // ignore close errors
+      }
     }
   }
-
-  return results
 }

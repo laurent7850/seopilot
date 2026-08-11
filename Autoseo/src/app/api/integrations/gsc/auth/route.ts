@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getGSCAuthUrl } from '@/services/google-search-console'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * GET /api/integrations/gsc/auth?siteId=xxx
  * Returns the Google OAuth2 authorization URL for connecting GSC.

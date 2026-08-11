@@ -511,6 +511,61 @@ export function downloadPDFReport(siteId: string) {
   window.open(`/api/reports/pdf?siteId=${siteId}`, '_blank')
 }
 
+// --- Content Score ---
+export async function scoreArticleContent(articleId: string) {
+  const res = await fetch('/api/ai/content-score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ articleId }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to score content')
+  }
+  return res.json()
+}
+
+export async function scoreRawContent(content: string, keyword: string, language = 'fr') {
+  const res = await fetch('/api/ai/content-score', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, keyword, language }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to score content')
+  }
+  return res.json()
+}
+
+// --- GEO Analysis ---
+export async function analyzeGEOReadiness(siteId: string) {
+  const res = await fetch('/api/ai/geo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ siteId }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to analyze GEO readiness')
+  }
+  return res.json()
+}
+
+// --- Email Notifications ---
+export async function sendTestWeeklyReport() {
+  const res = await fetch('/api/notifications/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'test-weekly' }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'Failed to send test report')
+  }
+  return res.json()
+}
+
 // --- User ---
 export async function updateUser(data: { name: string }) {
   const res = await fetch('/api/user', {

@@ -21,6 +21,10 @@ import {
   Loader2,
   FileDown,
   Bot,
+  Mail,
+  Brain,
+  Eye,
+  Workflow,
 } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
@@ -187,6 +191,49 @@ const phases: PhaseDef[] = [
       },
     ],
   },
+  {
+    id: 4,
+    title: 'Automatisation',
+    subtitle: 'Semaines 13+',
+    icon: Zap,
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
+    steps: [
+      {
+        key: 'score_content',
+        title: 'Analyser un article avec le score NLP',
+        description:
+          'Utilisez le score de contenu pour evaluer la couverture semantique de vos articles vs les top resultats Google.',
+        href: '/dashboard/articles',
+        icon: Brain,
+      },
+      {
+        key: 'configure_email',
+        title: 'Configurer les alertes email',
+        description:
+          'Activez les rapports hebdomadaires et les alertes de positions pour un pilotage passif de votre SEO.',
+        href: '/dashboard/settings',
+        icon: Mail,
+      },
+      {
+        key: 'geo_analysis',
+        title: 'Lancer une analyse GEO / AI Visibility',
+        description:
+          'Evaluez la pret de votre site pour les moteurs de recherche IA (ChatGPT, Perplexity, Google AI Overviews).',
+        href: '/dashboard/audit',
+        icon: Eye,
+      },
+      {
+        key: 'setup_n8n',
+        title: 'Connecter n8n pour l\'automatisation avancee',
+        description:
+          'Integrez n8n pour creer des workflows SEO personnalises : pipeline de contenu, monitoring de positions, veille concurrentielle.',
+        href: '/dashboard/settings',
+        icon: Workflow,
+      },
+    ],
+  },
 ]
 
 const TOTAL_STEPS = phases.reduce((acc, p) => acc + p.steps.length, 0)
@@ -202,6 +249,7 @@ export default function GuidePage() {
     1: true,
     2: true,
     3: true,
+    4: true,
   })
   const [togglingStep, setTogglingStep] = useState<string | null>(null)
 
@@ -478,6 +526,26 @@ export default function GuidePage() {
             {
               q: 'Puis-je utiliser SEOPilot pour plusieurs sites ?',
               a: 'Oui, selon votre plan d\'abonnement vous pouvez gerer un ou plusieurs sites. Chaque site a ses propres mots-cles, articles et parametres.',
+            },
+            {
+              q: 'Comment fonctionne le score de contenu NLP ?',
+              a: 'Le score de contenu analyse votre article sur 7 criteres : nombre de mots, lisibilite, densite du mot-cle, structure des titres, couverture semantique (via IA), medias/liens et placement du mot-cle. L\'IA compare egalement votre contenu aux resultats SERP top 10 pour identifier les termes manquants.',
+            },
+            {
+              q: 'Qu\'est-ce que le GEO (Generative Engine Optimization) ?',
+              a: 'Le GEO est l\'optimisation de votre contenu pour les moteurs de recherche IA (ChatGPT, Perplexity, Google AI Overviews). En 2026, 58% des recherches finissent sans clic. Le tracker GEO evalue si votre contenu est cite par les LLMs et vous donne des recommandations pour ameliorer votre visibilite IA.',
+            },
+            {
+              q: 'Comment configurer les alertes email ?',
+              a: 'Allez dans Parametres et configurez vos preferences de notification. SEOPilot envoie automatiquement un rapport hebdomadaire chaque lundi, et des alertes en temps reel si un mot-cle chute de plus de 5 positions ou si un backlink est perdu. Les parametres SMTP doivent etre configures sur le serveur.',
+            },
+            {
+              q: 'Comment integrer n8n pour l\'automatisation ?',
+              a: 'SEOPilot expose une API webhook a /api/webhooks/n8n qui supporte 8 actions : trigger-crawl, trigger-article, trigger-weekly-report, get-sites, get-keywords, get-articles, get-crawl-results et get-analytics. Ajoutez un noeud HTTP Request dans n8n pointant vers cette URL avec votre N8N_WEBHOOK_SECRET.',
+            },
+            {
+              q: 'Quels modeles d\'IA sont supportes ?',
+              a: 'SEOPilot supporte 5 providers : OpenAI (GPT-4o), OpenRouter (tous les modeles), Anthropic (Claude), Mistral et Google Gemini. Le provider est detecte automatiquement via les variables d\'environnement, ou vous pouvez forcer un choix avec LLM_PROVIDER et LLM_MODEL.',
             },
           ].map((faq, i) => (
             <details

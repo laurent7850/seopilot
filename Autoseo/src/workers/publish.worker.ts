@@ -103,8 +103,13 @@ async function processPublishJob(job: Job<PublishJobData>) {
         slug: article.slug,
         metaTitle: article.metaTitle,
         metaDescription: article.metaDescription,
+        seo_title: article.metaTitle,
+        seo_description: article.metaDescription,
         wordCount: article.wordCount,
         featuredImage: article.featuredImage,
+        status: 'published',
+        language: site.language || 'fr',
+        author_name: 'SEOPilot',
       },
     })
 
