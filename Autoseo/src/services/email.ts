@@ -17,7 +17,10 @@ function getTransporter(): nodemailer.Transporter {
       secure: process.env.SMTP_SECURE === 'true',
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
+        // SMTP_PASS is the documented name (see .env.example and lib/email.ts).
+        // SMTP_PASSWORD is kept as a fallback for existing deployments that
+        // still set the old name.
+        pass: process.env.SMTP_PASS || process.env.SMTP_PASSWORD,
       },
     })
   }

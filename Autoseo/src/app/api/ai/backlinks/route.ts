@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { suggestBacklinks } from '@/services/backlink-builder'
-import { aiRateLimit } from '@/lib/rate-limit'
+import { aiRateLimit, llmRateLimit } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
     }
+
+    // SECURITY: paid LLM call — per-user quota on top of the per-IP limiter.
+    const llmLimited = await llmRateLimit(request, session.user.id)
+    if (llmLimited) return llmLimited
 
     const { siteId } = await request.json()
 

@@ -652,7 +652,9 @@ async function checkLlmsTxt(baseUrl: string): Promise<AuditCheck> {
   }
 }
 
-async function checkPageSpeed(url: string): Promise<{ check: AuditCheck; vitals?: CoreWebVitals }> {
+async function checkPageSpeed(rawUrl: string): Promise<{ check: AuditCheck; vitals?: CoreWebVitals }> {
+  // Normalize URL — PageSpeed API requires a full http(s):// URL
+  const url = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`
   const apiKey = process.env.GOOGLE_PSI_API_KEY
   if (!apiKey) {
     return {

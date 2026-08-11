@@ -1,10 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getCrawlQueue, getEmailQueue, getArticleQueue } from '@/lib/queue'
+import { timingSafeEqual } from 'crypto'
+import { rateLimit } from '@/lib/rate-limit'
 
 // ---------------------------------------------------------------------------
 // n8n Webhook API — bidirectional integration with n8n workflows
 // ---------------------------------------------------------------------------
+
+// SECURITY: this endpoint is unauthenticated apart from the shared secret and
+// can trigger paid work (crawls, article generation), so it gets its own
+// limiter on top of the global middleware one.
+const webhookRateLimit = rateLimit({ interval: 60_000, maxRequests: 20 })
+
+/**
+ * Constant-time comparison — a plain `===` on a secret leaks its prefix
+ * through response timing, which is enough to recover it byte by byte.
+ */
+function secretMatches(provided: string | null, expected: string): boolean {
+  if (!provided) return false
+  const a = Buffer.from(provided)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
+}
 
 // Verify n8n webhook secret
 function verifyWebhookSecret(request: NextRequest): boolean {
@@ -15,18 +34,20 @@ function verifyWebhookSecret(request: NextRequest): boolean {
   }
 
   const authHeader = request.headers.get('authorization')
-  const apiKey = request.headers.get('x-api-key')
-  const webhookSecret = request.headers.get('x-webhook-secret')
+  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
 
-  if (authHeader === `Bearer ${secret}`) return true
-  if (apiKey === secret) return true
-  if (webhookSecret === secret) return true
-
-  return false
+  return (
+    secretMatches(bearer, secret) ||
+    secretMatches(request.headers.get('x-api-key'), secret) ||
+    secretMatches(request.headers.get('x-webhook-secret'), secret)
+  )
 }
 
 // GET — Health check & status for n8n
 export async function GET(request: NextRequest) {
+  const limited = webhookRateLimit(request)
+  if (limited) return limited
+
   if (!verifyWebhookSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -56,6 +77,9 @@ export async function GET(request: NextRequest) {
 
 // POST — Execute actions from n8n workflows
 export async function POST(request: NextRequest) {
+  const limited = webhookRateLimit(request)
+  if (limited) return limited
+
   if (!verifyWebhookSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

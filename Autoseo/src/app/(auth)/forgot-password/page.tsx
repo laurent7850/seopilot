@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
           <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
           <h1 className="mt-4 text-2xl font-bold text-gray-900">Email envoye</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Si un compte existe avec l'adresse <strong>{email}</strong>, vous recevrez un email avec un lien pour reinitialiser votre mot de passe.
+            Si un compte existe avec l&apos;adresse <strong>{email}</strong>, vous recevrez un email avec un lien pour reinitialiser votre mot de passe.
           </p>
           <p className="mt-4 text-xs text-gray-500">
             Le lien expire dans 1 heure.

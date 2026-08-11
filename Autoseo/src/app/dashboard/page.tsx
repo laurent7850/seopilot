@@ -243,7 +243,7 @@ export default function DashboardPage() {
             </div>
             <Link href="/dashboard/audit">
               <Button variant="outline" size="sm" className="gap-1 text-xs">
-                Voir l'audit complet
+                Voir l&apos;audit complet
                 <ChevronRight className="h-3 w-3" />
               </Button>
             </Link>

@@ -29,21 +29,23 @@ You write in ${language}. Your tone is ${tone}.
 Your task is to generate a fully SEO-optimized article targeting the keyword: "${keyword}".
 
 Requirements:
-- The article must be approximately ${wordCount} words
+- The article must be at least ${wordCount} words (do not fall short — this is a hard minimum, not a target to round down from)
 - Use proper HTML structure with H2 and H3 headings
-- Include an engaging introduction (2-3 paragraphs)
+- Include an engaging introduction (2-3 paragraphs) that mentions the target keyword in the first paragraph
 - Include 4-6 H2 sections, each with 2-3 paragraphs
-- Include H3 subsections where appropriate
+- Include at least 2 H3 subsections total (required, not optional)
 - Include a conclusion section
-- Naturally incorporate the target keyword and related terms throughout
+- Include at least one HTML list (<ul> or <ol>) somewhere in the content
+- Bold (<strong>) the target keyword or closely related key terms at least 2-3 times throughout the content
+- Naturally incorporate the target keyword and related terms throughout, aiming for a keyword density around 0.5-3% of total words (never keyword-stuff)
 - Use short paragraphs for readability
-- Include bullet points or numbered lists where relevant
+- The target keyword must appear in the title
 
 You must respond in valid JSON with the following structure:
 {
   "title": "Article title (compelling, includes keyword)",
   "metaTitle": "SEO meta title (max 60 characters, includes keyword)",
-  "metaDescription": "SEO meta description (max 155 characters, includes keyword, compelling call to action)",
+  "metaDescription": "SEO meta description (between 120 and 155 characters, includes keyword, compelling call to action)",
   "slug": "url-friendly-slug-based-on-title",
   "content": "Full HTML article content with H2/H3 structure",
   "wordCount": estimated_word_count_number
@@ -51,7 +53,7 @@ You must respond in valid JSON with the following structure:
 
 Important:
 - metaTitle must be at most 60 characters
-- metaDescription must be at most 155 characters
+- metaDescription must be between 50 and 155 characters (aim for 120-155)
 - slug must be lowercase, hyphen-separated, no special characters
 - content must be valid HTML (no <html>, <head>, or <body> tags, just the article body)
 - Do NOT wrap the content in \`\`\`html code blocks`

@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { researchKeywords } from '@/services/keyword-researcher'
+import { researchKeywordsDetailed } from '@/services/keyword-researcher'
 import { getKeywordQueue } from '@/lib/queue'
+import { llmRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +17,10 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = (session.user as any).id as string
+
+    // SECURITY: this endpoint calls a paid LLM — cap usage per user.
+    const rateLimited = await llmRateLimit(request, userId)
+    if (rateLimited) return rateLimited
     const body = await request.json()
     const { niche, seedKeywords, language, siteId } = body
     const isAsync = body.async === true
@@ -67,12 +72,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Sync mode: research inline (original behavior)
-    const keywords = await researchKeywords({
+    const research = await researchKeywordsDetailed({
       niche,
       seedKeywords,
       language,
       count: body.count,
+      market: site.market || undefined,
     })
+    const keywords = research.keywords
 
     // Upsert keywords into the database
     const savedKeywords = await Promise.all(
@@ -106,6 +113,15 @@ export async function POST(request: NextRequest) {
         ...kw,
         id: savedKeywords[index].id,
       })),
+      // Be explicit about data provenance: volumes are either measured or
+      // estimated, and the UI must not present the two identically.
+      dataSource: {
+        metricsAreMeasured: research.metricsAreMeasured,
+        realQueriesUsed: research.realQueriesUsed,
+        note: research.metricsAreMeasured
+          ? 'Volumes mesures via DataForSEO.'
+          : 'Volumes et difficultes estimes par IA — a titre indicatif uniquement.',
+      },
     })
   } catch (error) {
     console.error('Keyword research error:', error)

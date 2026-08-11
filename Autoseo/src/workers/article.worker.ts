@@ -1,6 +1,7 @@
 import { Worker, Job } from 'bullmq'
 import { PrismaClient } from '@prisma/client'
 import { getRedisConnection } from '../lib/redis'
+import { calculateSeoScore } from '../services/seo-scorer'
 
 const prisma = new PrismaClient()
 
@@ -38,6 +39,24 @@ async function processArticleJob(job: Job<ArticleJobData>) {
   const { fetchUnsplashImage } = await import('../services/unsplash')
   const featuredImage = await fetchUnsplashImage(keyword)
 
+  // Word count must be measured from the actual generated content, not the
+  // LLM's self-reported estimate (see generate/route.ts for the same fix).
+  const actualWordCount = generated.content
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .filter(Boolean).length
+
+  const seoResult = calculateSeoScore({
+    title: generated.title,
+    metaTitle: generated.metaTitle,
+    metaDescription: generated.metaDescription,
+    content: generated.content,
+    keyword,
+    wordCount: actualWordCount,
+  })
+
   // Determine initial status based on scheduling
   const initialStatus = scheduledAt && !autoPublish ? 'SCHEDULED' : 'DRAFT'
   const initialScheduledAt = scheduledAt && !autoPublish ? new Date(scheduledAt) : null
@@ -51,7 +70,8 @@ async function processArticleJob(job: Job<ArticleJobData>) {
       content: generated.content,
       metaTitle: generated.metaTitle,
       metaDescription: generated.metaDescription,
-      wordCount: generated.wordCount,
+      wordCount: actualWordCount,
+      seoScore: seoResult.score,
       featuredImage,
       status: initialStatus,
       scheduledAt: initialScheduledAt,
@@ -107,7 +127,7 @@ async function processArticleJob(job: Job<ArticleJobData>) {
             metaDescription: generated.metaDescription,
             seo_title: generated.metaTitle,
             seo_description: generated.metaDescription,
-            wordCount: generated.wordCount,
+            wordCount: actualWordCount,
             featuredImage,
             status: 'published',
             language: site.language || 'fr',

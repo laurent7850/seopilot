@@ -30,7 +30,7 @@ const PROVIDER_CONFIGS: Record<LLMProvider, Omit<LLMConfig, 'apiKey'> & { envKey
     provider: 'anthropic',
     envKey: 'ANTHROPIC_API_KEY',
     baseURL: 'https://api.anthropic.com/v1',
-    defaultModel: 'claude-sonnet-4-6',
+    defaultModel: 'claude-sonnet-5',
   },
   mistral: {
     provider: 'mistral',

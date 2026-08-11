@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { scoreContent } from '@/services/content-optimizer'
+import { llmRateLimit } from '@/lib/rate-limit'
 
 // POST — Score an article's content for SEO optimization
 export async function POST(request: NextRequest) {
@@ -13,6 +14,10 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = (session.user as any).id as string
+
+    // SECURITY: this endpoint calls a paid LLM — cap usage per user.
+    const rateLimited = await llmRateLimit(request, userId)
+    if (rateLimited) return rateLimited
     const body = await request.json()
     const { articleId, content, keyword, language } = body
 

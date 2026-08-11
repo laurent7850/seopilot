@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { analyzeGEO } from '@/services/geo-tracker'
+import { llmRateLimit } from '@/lib/rate-limit'
 
 // POST — Analyze a site's GEO (Generative Engine Optimization) readiness
 export async function POST(request: NextRequest) {
@@ -13,6 +14,10 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = (session.user as any).id as string
+
+    // SECURITY: this endpoint calls a paid LLM — cap usage per user.
+    const rateLimited = await llmRateLimit(request, userId)
+    if (rateLimited) return rateLimited
     const body = await request.json()
     const { siteId } = body
 

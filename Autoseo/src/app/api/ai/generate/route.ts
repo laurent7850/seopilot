@@ -7,6 +7,7 @@ import { calculateSeoScore } from '@/services/seo-scorer'
 import { getArticleQueue } from '@/lib/queue'
 import { publishViaWebhook } from '@/services/publisher'
 import { fetchUnsplashImage } from '@/services/unsplash'
+import { llmRateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +20,11 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = (session.user as any).id as string
+
+    // SECURITY: article generation is the most expensive LLM call in the app —
+    // cap it per user, not just per IP (see lib/rate-limit).
+    const rateLimited = await llmRateLimit(request, userId)
+    if (rateLimited) return rateLimited
     const body = await request.json()
     const { keyword, niche, language, siteId } = body
     const isAsync = body.async === true
@@ -73,6 +79,16 @@ export async function POST(request: NextRequest) {
       wordCount: body.wordCount,
     })
 
+    // Word count must be measured from the actual generated content, not the
+    // LLM's self-reported estimate, which is frequently inflated and would
+    // otherwise skew the SEO score's word-count component.
+    const actualWordCount = generated.content
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .split(' ')
+      .filter(Boolean).length
+
     // Calculate SEO score
     const seoResult = calculateSeoScore({
       title: generated.title,
@@ -80,7 +96,7 @@ export async function POST(request: NextRequest) {
       metaDescription: generated.metaDescription,
       content: generated.content,
       keyword,
-      wordCount: generated.wordCount,
+      wordCount: actualWordCount,
     })
 
     // Fetch a featured image from Unsplash
@@ -95,7 +111,7 @@ export async function POST(request: NextRequest) {
         content: generated.content,
         metaTitle: generated.metaTitle,
         metaDescription: generated.metaDescription,
-        wordCount: generated.wordCount,
+        wordCount: actualWordCount,
         seoScore: seoResult.score,
         featuredImage,
         status: 'PUBLISHED',
@@ -120,7 +136,7 @@ export async function POST(request: NextRequest) {
           content: generated.content,
           metaTitle: generated.metaTitle,
           metaDescription: generated.metaDescription,
-          wordCount: generated.wordCount,
+          wordCount: actualWordCount,
           featuredImage,
         },
       })

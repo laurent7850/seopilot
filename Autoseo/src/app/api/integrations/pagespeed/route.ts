@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Site not found' }, { status: 404 })
     }
 
-    const result = await runPageSpeedAnalysis(site.url, strategy)
+    // Normalize URL — PageSpeed API requires a full http(s):// URL
+    const siteUrl = /^https?:\/\//i.test(site.url) ? site.url : `https://${site.url}`
+    const result = await runPageSpeedAnalysis(siteUrl, strategy)
 
     return NextResponse.json(result)
   } catch (error) {
